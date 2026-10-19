@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Construtor de ITr · COTEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   CONFIGURAÇÃO DO PROFESSOR
+   Cole a URL do Apps Script (termina em /exec) na constante
+   API_URL, lá no início do <script>, perto do fim do arquivo.
+   ========================================================= */
+:root{
+  --paper:#f6f4ee; --card:#ffffff; --ink:#1d2433; --ink-2:#4a5368; --ink-3:#7a8296;
+  --line:#d9d5ca; --line-2:#ebe8df;
+  --navy:#1f3a5f; --navy-2:#2c5282; --navy-soft:#e7eef7;
+  --accent:#d9611e; --accent-soft:#fbeadf;
+  --ok:#2f7d4f; --ok-soft:#e3f2e8;
+  --warn:#a86a00; --warn-soft:#fff4d6;
+  --err:#b42318; --err-soft:#fde7e5;
+  --info:#2c5282; --info-soft:#e7eef7;
+  --r:10px; --shadow:0 1px 2px rgba(20,30,50,.06),0 2px 8px rgba(20,30,50,.05);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px;line-height:1.55}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+h1,h2,h3,h4{line-height:1.25;margin:0 0 .5em}
+h2{font-size:1.45rem}
+h3{font-size:1.1rem}
+p{margin:0 0 .8em}
+a{color:var(--navy-2)}
+button{font:inherit;cursor:pointer}
+textarea,input,select{font:inherit;color:inherit}
+
+/* ---------- topo ---------- */
+.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.top-in{max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-badge{background:var(--accent);color:#fff;font-family:'IBM Plex Mono',monospace;font-weight:600;padding:4px 8px;border-radius:6px;font-size:.85rem;letter-spacing:.04em}
+.brand-t{font-weight:600;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-s{font-size:.78rem;opacity:.75}
+.top .code{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.8rem;opacity:.85}
+.steps{max-width:1240px;margin:0 auto;padding:0 16px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+.st{flex:1 0 auto;min-width:92px;border:0;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-radius:8px;padding:6px 10px;text-align:left;font-size:.78rem;line-height:1.2}
+.st b{display:block;font-family:'IBM Plex Mono',monospace;font-size:.7rem;opacity:.8}
+.st.done{color:#fff;background:rgba(255,255,255,.14)}
+.st.done b::after{content:" ✓"}
+.st.cur{background:#fff;color:var(--navy)}
+.st:disabled{cursor:not-allowed;opacity:.55}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:22px 16px 120px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.wrap.single{grid-template-columns:minmax(0,1fr)}
+.main{min-width:0}
+.side{position:sticky;top:120px;max-height:calc(100vh - 140px);overflow:auto;display:flex;flex-direction:column;gap:14px}
+@media (max-width:960px){.wrap{grid-template-columns:minmax(0,1fr)}.side{position:static;max-height:none}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+.card.tight{padding:14px 16px}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px}
+.lead{font-size:1.05rem;color:var(--ink-2)}
+.muted{color:var(--ink-3);font-size:.9rem}
+.pill{display:inline-block;white-space:nowrap;font-size:.75rem;padding:2px 8px;border-radius:99px;background:var(--navy-soft);color:var(--navy);font-weight:600}
+
+.callout{border-left:4px solid var(--navy-2);background:var(--navy-soft);padding:12px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+.callout.orange{border-color:var(--accent);background:var(--accent-soft)}
+.callout.green{border-color:var(--ok);background:var(--ok-soft)}
+.callout p:last-child{margin-bottom:0}
+
+.rules{counter-reset:r;list-style:none;padding:0;margin:10px 0}
+.rules li{counter-increment:r;position:relative;padding:8px 0 8px 42px;border-bottom:1px dashed var(--line)}
+.rules li:last-child{border-bottom:0}
+.rules li::before{content:counter(r);position:absolute;left:0;top:7px;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:.85rem}
+
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.cols3>div{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fbfaf7}
+.cols3 h4{font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:6px}
+@media (max-width:700px){.cols3{grid-template-columns:1fr}}
+
+/* acordeão do "Aprender" */
+details.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;box-shadow:var(--shadow)}
+details.lesson>summary{list-style:none;padding:14px 18px;cursor:pointer;display:flex;gap:12px;align-items:center;font-weight:600}
+details.lesson>summary::-webkit-details-marker{display:none}
+details.lesson>summary .n{flex:0 0 30px;height:30px;border-radius:8px;background:var(--navy-soft);color:var(--navy);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:.85rem}
+details.lesson[open]>summary .n{background:var(--navy);color:#fff}
+details.lesson.seen>summary .n{background:var(--ok);color:#fff}
+details.lesson>summary .chev{margin-left:auto;transition:transform .2s;color:var(--ink-3)}
+details.lesson[open]>summary .chev{transform:rotate(90deg)}
+details.lesson .body{padding:0 20px 16px 60px}
+@media (max-width:600px){details.lesson .body{padding:0 16px 16px}}
+
+/* formulários */
+label.f{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+.inp,textarea.inp,select.inp{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;transition:border-color .15s, box-shadow .15s}
+.inp:focus{outline:none;border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(44,82,130,.15)}
+textarea.inp{resize:vertical;min-height:44px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px}
+@media (max-width:700px){.grid2,.grid4{grid-template-columns:1fr}}
+
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--navy-2)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.pri:hover{background:var(--navy-2)}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--line-2)}
+.btn.sm{padding:4px 9px;font-size:.82rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.danger:hover{border-color:var(--err);color:var(--err)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* rodapé de navegação */
+.foot{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);z-index:15;backdrop-filter:blur(6px)}
+.foot-in{max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center}
+.foot .why{flex:1;font-size:.85rem;color:var(--warn);min-width:0}
+.foot .why.ok{color:var(--ok)}
+.saved{font-size:.75rem;color:var(--ink-3);font-family:'IBM Plex Mono',monospace}
+
+/* alertas do assistente */
+.alerts{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.al{font-size:.84rem;padding:5px 9px;border-radius:6px;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
+.al i{font-style:normal;font-weight:700;flex:0 0 auto}
+.al.err{background:var(--err-soft);color:var(--err)}
+.al.warn{background:var(--warn-soft);color:#7a4d00}
+.al.info{background:var(--info-soft);color:var(--info)}
+.al.ok{background:var(--ok-soft);color:var(--ok)}
+
+/* coluna 1 */
+.stp{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line-2)}
+.stp:last-child{border-bottom:0}
+.num{width:36px;height:36px;border-radius:8px;background:var(--navy);color:#fff;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-weight:600}
+.tools{display:flex;flex-direction:column;gap:4px}
+.tools .btn{padding:3px 8px;font-size:.8rem;justify-content:center}
+
+/* coluna 2/3 */
+.sblock{border:1px solid var(--line);border-radius:var(--r);background:var(--card);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+.shead{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:#fbfaf7;border-bottom:1px solid var(--line)}
+.shead .num{flex:0 0 36px}
+.shead .txt{font-weight:600;padding-top:6px}
+.sbody{padding:12px 14px}
+.risk{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:start;margin-bottom:10px}
+.inum{font-family:'IBM Plex Mono',monospace;font-size:.85rem;color:var(--accent);font-weight:600;padding-top:9px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1px dashed var(--accent);background:var(--accent-soft);color:#8a3a0c;border-radius:99px;padding:3px 10px;font-size:.8rem}
+.chip:hover{background:#f8d9c4}
+.pair{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.pair:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.riskro{background:var(--warn-soft);border-radius:6px;padding:7px 10px;font-size:.92rem;margin-bottom:6px}
+.riskro b{color:#7a4d00;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;display:block}
+.guide{font-size:.82rem;color:var(--ink-2);margin:6px 0 0;padding-left:18px}
+.guide li{margin:2px 0}
+.norisk{display:flex;gap:8px;align-items:center;font-size:.9rem;color:var(--ink-2);margin-top:4px}
+
+/* lateral */
+.sidecard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)}
+.sidecard h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--navy);margin-bottom:8px}
+.sidecard ol,.sidecard ul{padding-left:18px;margin:0;font-size:.88rem}
+.sidecard li{margin:4px 0}
+.chk{list-style:none;padding:0 !important}
+.chk li{display:flex;gap:8px;align-items:flex-start}
+.chk li .m{flex:0 0 18px;font-weight:700}
+.chk li.y .m{color:var(--ok)}
+.chk li.n .m{color:var(--ink-3)}
+.meter{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden;margin:4px 0 10px}
+.meter>span{display:block;height:100%;background:var(--ok);transition:width .3s}
+.meter.mid>span{background:#d49a1a}
+.meter.low>span{background:var(--err)}
+
+/* quiz */
+.q{border-top:1px solid var(--line-2);padding:14px 0}
+.q:first-of-type{border-top:0}
+.q .opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 12px}
+.opt:hover{border-color:var(--navy-2)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--err);background:var(--err-soft)}
+.fb{margin-top:8px;font-size:.9rem;padding:8px 12px;border-radius:8px}
+.fb.right{background:var(--ok-soft);color:#1d5233}
+.fb.wrong{background:var(--err-soft);color:#7d1a12}
+
+/* experimentos */
+.exps{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.exp{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.exp:hover{border-color:var(--navy-2)}
+.exp .c{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--accent);font-weight:600}
+.exp .t{font-weight:600;font-size:.95rem;line-height:1.3}
+.exp .d{font-size:.8rem;color:var(--ink-3)}
+.exp.sel{border:2px solid var(--navy);background:var(--navy-soft)}
+
+/* tabela ITr */
+.itr{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff}
+.itr th,.itr td{border:1.5px solid #333;padding:7px 9px;vertical-align:top}
+.itr .hd td{background:#fff;font-variant:normal}
+.itr thead th{background:#d8d8d8;font-variant:small-caps;font-size:.92rem}
+.itr .hd td{vertical-align:middle}
+.itr .hd .ttl{text-align:center}
+.itr .hd .ttl b{font-size:1.15rem;letter-spacing:.06em}
+.itr .hd .meta{text-align:center;font-size:.8rem;width:23%}
+.itr .n{font-weight:700;margin-right:4px}
+.table-scroll{overflow-x:auto}
+
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.score>div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fbfaf7}
+.score .v{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:600}
+@media (max-width:600px){.score{grid-template-columns:1fr}}
+.issues{list-style:none;padding:0;margin:0}
+.issues li b{white-space:nowrap}
+.issues li{padding:6px 0;border-bottom:1px dashed var(--line);font-size:.88rem;display:flex;gap:8px;align-items:baseline}
+.issues li button{margin-left:auto;flex:0 0 auto}
+.receipt{border:2px dashed var(--ok);border-radius:12px;padding:18px;background:var(--ok-soft);text-align:center}
+.receipt .big{font-family:'IBM Plex Mono',monospace;font-size:1.6rem;font-weight:600;color:var(--ok)}
+
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:.9rem;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+/* impressão: só a ITr */
+#printArea{display:none}
+@media print{
+  body{background:#fff}
+  .top,.foot,.wrap,.toast{display:none !important}
+  #printArea{display:block}
+  .itr{font-size:10.5pt}
+  @page{size:A4;margin:12mm}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <span class="brand-badge">ITr</span>
+      <div style="min-width:0">
+        <div class="brand-t">Construtor de Instrução de Trabalho</div>
+        <div class="brand-s">COTEL · Química Geral Experimental · Programa Análise do Trabalho</div>
+      </div>
+    </div>
+    <div class="code" id="topCode"></div>
+  </div>
+  <nav class="steps" id="stepper" aria-label="Etapas da atividade"></nav>
+</header>
+
+<div class="wrap" id="wrap">
+  <main class="main" id="main"></main>
+  <aside class="side" id="side"></aside>
+</div>
+
+<footer class="foot">
+  <div class="foot-in">
+    <button class="btn" id="btnPrev">← Voltar</button>
+    <div class="why" id="why"></div>
+    <span class="saved" id="saved"></span>
+    <button class="btn pri" id="btnNext">Avançar →</button>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+/* ================================================================
+   CONFIGURAÇÃO — cole aqui a URL do App da Web do Apps Script
+   (Implantar > Nova implantação > App da Web > copiar URL /exec)
+   ================================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbwNSlm0HhI-wLvFApRYiIl_pa6s0z0hI7KVDRWq4jr-nuvpclsaaqhlqEfQzwPP0LeMsg/exec';
+const VERSAO = 'ITr-COTEL 1.0';
+
+/* ---------------- dados: experimentos da apostila ---------------- */
+const EXPS = [
+ {c:'E1A', t:'Medidas de volume e uso da balança', d:'Exp. 1 – Parte A · exatidão e precisão',
+  mat:'Béquer 100 mL; proveta 25 mL; pipeta volumétrica 25,0 mL; pipeta graduada 25 mL; pissete; balança semianalítica (0,001 g); conta-gotas.',
+  reag:'Água destilada.',
+  proc:['Verificar a capacidade e a precisão da balança; verificar se o prato está limpo; zerar a balança.','Pesar e tarar um béquer de 100 mL.','Medir 25 mL de água em uma proveta, transferir para o béquer, pesar e anotar a massa. Repetir.','Executar o mesmo procedimento com as pipetas de 25,0 mL.','Realizar em triplicata e comparar a exatidão e a precisão das vidrarias.']},
+ {c:'E1B', t:'Determinação da densidade de líquidos', d:'Exp. 1 – Parte B · água, álcool, glicerina e óleo',
+  mat:'Béquer 100 mL; proveta 10 mL; pissete; balança analítica (0,0001 g); conta-gotas.',
+  reag:'Água destilada; álcool etílico; glicerina; óleo vegetal.',
+  proc:['Pesar um béquer de 100 mL e tarar.','Medir 5 mL de água destilada em proveta, ajustando o menisco; transferir para o béquer zerado e anotar a massa.','Repetir com álcool, glicerina e óleo vegetal. Anotar e calcular.']},
+ {c:'E3A', t:'Separação em funil de decantação', d:'Exp. 3 – Parte A · água + óleo',
+  mat:'Proveta; funil de decantação; suporte universal; anel de ferro (garra).',
+  reag:'Água destilada; óleo vegetal.',
+  proc:['Montar o aparato experimental (Figura 1).','Medir 25 mL de água e de óleo em proveta e transferir para o funil de decantação.','Tampar com rolha e agitar suavemente.','Deixar em repouso até a separação das fases.','Abrir a válvula e permitir o escoamento da fase mais densa.']},
+ {c:'E3B', t:'Filtração simples', d:'Exp. 3 – Parte B · filtração por gravidade',
+  mat:'Funil de vidro; papel de filtro; béquer; pissete; proveta; bastão de vidro; suporte universal; anel de ferro.',
+  reag:'Solução de hidróxido de sódio; solução de alumínio; água destilada.',
+  proc:['Adaptar o papel de filtro ao funil, umedecendo-o; colocar o funil no anel preso ao suporte.','Medir 10 mL de cada solução em proveta, misturar em béquer e agitar com bastão.','Transferir a mistura para o funil com auxílio do bastão, sem ultrapassar 2/3 da altura do papel.','Observar o sólido retido e o filtrado.']},
+ {c:'E3C', t:'Filtração a vácuo', d:'Exp. 3 – Parte C · funil de Büchner e kitassato',
+  mat:'Béquer; bastão de vidro; funil de Büchner; kitassato.',
+  reag:'Ácido acetilsalicílico; etanol; água.',
+  proc:['Pesar cerca de 1 g de ácido acetilsalicílico em béquer e adicionar 5 mL de etanol; adicionar 20 mL de água destilada.','Montar o aparato (Figura 3) e adaptar o papel de filtro ao Büchner, umedecendo-o.','Filtrar o sólido formado.']},
+ {c:'EFA', t:'Temperatura de fusão e ebulição da água', d:'Exp. Fenômenos físicos – Parte A · bico de Bunsen',
+  mat:'Béquer 100 mL; termômetro; suporte universal; garra; tela; tripé; bastão de vidro; pissete; bico de Bunsen.',
+  reag:'Água; gelo.',
+  proc:['Acender o bico de Bunsen e aquecer a tela sobre o tripé por 5 min.','Adicionar gelo até 2/3 do béquer de 100 mL e cerca de 10 mL de água.','Com a temperatura estável, colocar o béquer sobre a tela e fixar o termômetro com suporte e garra.','Disparar o cronômetro e anotar a temperatura a cada 1 minuto até estabilizar.','Relacionar o gráfico temperatura × tempo com as mudanças de estado. Fazer em triplicata.']},
+ {c:'EFB', t:'Sublimação do iodo', d:'Exp. Fenômenos físicos – Parte B',
+  mat:'Béquer 50 mL seco; vidro de relógio; tela; tripé; bico de Bunsen.',
+  reag:'Cristais de iodo.',
+  proc:['Colocar 2 cristais de iodo em béquer de 50 mL completamente seco.','Cobrir o béquer com vidro de relógio.','Colocar o béquer sobre a tela aquecida e observar.']},
+ {c:'E4A', t:'Miscibilidade entre solventes', d:'Exp. 4 – Parte A · água, etanol, butanol, gasolina, glicerina',
+  mat:'Tubos de ensaio; pipetas; béqueres; proveta; pissete; bastão de vidro.',
+  reag:'Água; etanol; butanol; gasolina; glicerina.',
+  proc:['Preparar as misturas (a) a (i) em tubos de ensaio numerados (5 mL + 2 mL).','Agitar e deixar em repouso.','Observar e anotar. CUIDADO: solventes orgânicos são inflamáveis.']},
+ {c:'E4B', t:'Teor de etanol na gasolina', d:'Exp. 4 – Parte B · proveta com tampa',
+  mat:'Proveta de 50 mL com tampa.',
+  reag:'Gasolina comercial; água destilada.',
+  proc:['Medir 10 mL de gasolina em proveta de 50 mL com tampa, ajustando o menisco; adicionar 10 mL de água destilada.','Agitar vagarosamente para homogeneizar.','Observar a formação de mistura bifásica.','Anotar o volume final da fase aquosa e calcular a % v/v de álcool.','Comparar com o limite da ANP.']},
+ {c:'E5', t:'Reações de óxido-redução', d:'Exp. 5 · metais (Zn, Sn, Cu) e soluções',
+  mat:'Tubos de ensaio; provetas; pipetas; espátulas; conta-gotas.',
+  reag:'Zn, Sn e Cu metálicos; Zn(NO₃)₂ 1 mol/L; Cu(NO₃)₂ 1 mol/L; HCl 1 mol/L.',
+  proc:['Separar e identificar 7 tubos de ensaio.','Em cada tubo, adicionar pequena quantidade do metal e 5 mL da solução indicada.','Agitar vigorosamente e observar por cerca de 10 minutos.','Anotar as observações no caderno.']},
+ {c:'E7B', t:'Padronização da solução de H₂SO₄', d:'Exp. 6 e 7 – Parte B · titulação com Na₂CO₃',
+  mat:'Bureta; suporte e garra; pipeta volumétrica 25,0 mL; erlenmeyer 250 mL; pera; béqueres; bico de Bunsen, tripé e tela.',
+  reag:'H₂SO₄ ~0,05 mol/L; Na₂CO₃ padrão; vermelho de metila; água destilada.',
+  proc:['Montar e lavar a bureta; rinsar duas vezes com a solução de H₂SO₄; encher e zerar.','Pipetar 25,0 mL de Na₂CO₃ para o erlenmeyer; adicionar 20–25 mL de água e 3–4 gotas de indicador.','Titular com agitação constante até coloração rosada; anotar o volume.','Aquecer levemente 1–2 min; se voltar a amarelo, resfriar e continuar a titulação.','Repetir mais 2 vezes e calcular a concentração real.']},
+ {c:'E8', t:'Acidez total do vinagre', d:'Exp. 8 · titulação com NaOH',
+  mat:'Bureta 50 mL; pipeta volumétrica 10,0 e 25,0 mL; balão volumétrico 100 mL; erlenmeyer 250 mL; pera; béqueres.',
+  reag:'NaOH padronizado; vinagre comercial; fenolftaleína 1%; água destilada.',
+  proc:['Lavar e rinsar a bureta com NaOH; encher, sem bolhas nem vazamentos.','Pipetar 10,0 mL de vinagre para balão de 100 mL e completar com água; homogeneizar.','Pipetar 25,0 mL da amostra diluída para erlenmeyer, juntar 20–25 mL de água e 3–4 gotas de fenolftaleína.','Titular até levemente rosado; anotar o volume. Fazer em triplicata.','Calcular a acidez (% m/v).']},
+ {c:'E9', t:'Mg(OH)₂ no leite de magnésia', d:'Exp. 9 · retrotitulação',
+  mat:'Bureta 50 mL; pipeta volumétrica 50,0 mL; erlenmeyer; balança analítica; proveta; pera.',
+  reag:'NaOH e HCl padronizados (0,1 mol/L); leite de magnésia; fenolftaleína; água destilada.',
+  proc:['Preparar a bureta com NaOH.','Agitar a amostra; pesar cerca de 1 g em erlenmeyer na balança analítica.','Adicionar 50,0 mL de HCl 0,1 mol/L (pipeta volumétrica) e cerca de 25 mL de água; homogeneizar.','Adicionar fenolftaleína e titular com NaOH até levemente rosado; anotar o volume.','Repetir e calcular a pureza.']},
+ {c:'E10', t:'Preparo de solução-tampão (pH 5,0)', d:'Exp. 10 · ácido acético / acetato de sódio',
+  mat:'Vidro de relógio; béquer 50 mL; balões volumétricos 50 e 100 mL; pipeta graduada 1 mL; buretas 25 e 50 mL; pHmetro.',
+  reag:'CH₃COONa·3H₂O sólido; ácido acético concentrado; água destilada.',
+  proc:['Calcular e preparar 50 mL de CH₃COOH 0,1 mol/L (pipetar o ácido concentrado para balão com água; completar e homogeneizar).','Calcular, pesar e dissolver o acetato; transferir quantitativamente para balão de 100 mL; completar.','Calcular a razão pelo Henderson-Hasselbalch.','Adicionar os volumes de ácido e acetato (buretas) em béquer, agitar e medir o pH no pHmetro.']},
+ {c:'OUT', t:'Outro procedimento do laboratório', d:'Descreva qual é o procedimento',
+  mat:'', reag:'', proc:[]}
+];
+
+/* ---------------- dados: exemplo do manual (ITr H2SO4) ---------------- */
+const EXEMPLO = [
+ {e:'Colocar avental de manga comprida e óculos de segurança e separar luvas de látex.', it:[['Lesões pelo contato com produtos químicos.','Uso a partir da entrada do laboratório, durante todo o tempo, exceto a luva.']]},
+ {e:'Efetuar o cálculo da quantidade de H₂SO₄ puro necessário para a preparação do volume e concentração desejados.', it:[['Erros nos cálculos.','Confirmar o resultado com o professor e colegas.']]},
+ {e:'Selecionar os equipamentos e produtos a serem utilizados.', it:[['Perda de tempo desnecessária durante a preparação.','a) Separar: pipeta graduada de 1 mL, pera, pisseta, béquer de 250 mL, béquer de 100 mL, bastão de vidro e frasco de ácido sulfúrico concentrado (na capela). b) Verificar as condições de funcionamento da capela.']]},
+ {e:'Lavar a pipeta, o béquer e o bastão.', it:[['Quebra do material.','Verificar, antes, se o material não está trincado.'],['Limpeza incompleta.','Lavar com água da torneira e detergente e rinsar com água destilada.']]},
+ {e:'Transferir cerca de 10 mL de H₂SO₄ concentrado para um béquer de 100 mL. Executar essa operação na capela.', it:[['Ver potencial 1.','Ver procedimento 1, acrescendo-se o uso de luva.']]},
+ {e:'Encher o béquer de 250 mL com cerca de 50 mL de água destilada.', it:[]},
+ {e:'Transferir o H₂SO₄ calculado (0,54 mL) do béquer de 100 mL para o de 250 mL.', it:[['Ver potencial 1.','Usar também luva.'],['Erro de medida.','Usar pipeta graduada e pera.']]},
+ {e:'Adicionar água destilada ao béquer até que o volume atinja aproximadamente 200 mL.', it:[['Excesso de água destilada.','Encher com água somente até o volume aproximado de 180 mL.']]}
+];
+
+/* ---------------- quiz ---------------- */
+const QUIZ = [
+ {q:'Qual destas frases está bem escrita para a 1ª coluna (Sequência das Etapas)?',
+  o:['A solução de carbonato deve ser pipetada com cuidado.','Pipetar 25,0 mL da solução de Na₂CO₃ para o erlenmeyer.','Pipetou-se 25,0 mL da solução de Na₂CO₃.','Pipetagem.'], a:1,
+  fb:'A etapa começa com verbo de ação no infinitivo e diz o que fazer, sem excesso de detalhes. “Pipetou-se” é linguagem de relatório (passado); “com cuidado” é intenção, não etapa; “Pipetagem” não diz o que fazer.'},
+ {q:'O que deve ser escrito na 2ª coluna (Potencial de Perdas e Acidentes)?',
+  o:['A medida de proteção: “usar luvas”.','Os riscos de acidente e também as possíveis perdas (de material, tempo, qualidade do resultado).','Apenas os acidentes graves.','Uma advertência: “Atenção!”.'], a:1,
+  fb:'A 2ª coluna registra tudo o que pode dar errado: lesões, mas também perdas e falhas de qualidade (ex.: “erro na leitura do menisco”). As medidas ficam para a 3ª coluna.'},
+ {q:'Qual entrada da 3ª coluna segue o manual do PAT?',
+  o:['Tome muito cuidado com o ácido!','Esteja alerta durante a diluição.','Adicionar o ácido lentamente sobre a água, na capela, usando luvas e óculos de segurança.','Seja cauteloso.'], a:2,
+  fb:'A 3ª coluna descreve AÇÕES, não intenções. “Cuidado!”, “Seja cauteloso!”, “Esteja alerta!” não ensinam o que fazer nem como fazer.'},
+ {q:'Em que ordem a ITr deve ser elaborada?',
+  o:['Uma etapa por vez, preenchendo as três colunas de cada linha.','Primeiro a 3ª coluna, depois as outras.','Concluir toda a 1ª coluna, depois toda a 2ª e só então a 3ª.','Tanto faz a ordem.'], a:2,
+  fb:'Método e disciplina: “nunca passar para a segunda coluna sem antes haver concluído a primeira”. Assim a discussão dos riscos não se mistura com a das medidas.'},
+ {q:'Na etapa “Ler o volume gasto na bureta”, qual é um potencial de perda adequado?',
+  o:['Erro de leitura do volume por paralaxe ou bolha de ar na ponta da bureta.','Usar a bureta corretamente.','Cuidado na leitura.','Nenhum, ler não tem risco.'], a:0,
+  fb:'Mesmo uma etapa sem risco de lesão pode ter perda de qualidade. O manual lembra que não existem operações sem risco.'},
+ {q:'Cada precaução da 3ª coluna deve…',
+  o:['ser genérica, para servir a várias etapas.','estar associada a um risco específico da 2ª coluna, com a mesma numeração.','repetir o texto da 1ª coluna.','ficar em branco quando o risco é pequeno.'], a:1,
+  fb:'Recomendação 4 do manual: associar cada precaução recomendada a um risco específico. Por isso os itens são numerados 7.1, 7.2…'}
+];
+
+/* ---------------- perguntas-guia do manual (2ª coluna) ---------------- */
+const PERG = [
+ 'a) Há risco de bater contra algum objeto ou de contato lesivo com um objeto?',
+ 'b) Alguém pode ser atingido por objetos?',
+ 'c) Há possibilidade de escorregar ou tropeçar? A queda seria no mesmo nível ou para nível mais baixo?',
+ 'd) O executor pode se lesionar ao empurrar, puxar ou erguer algo?',
+ 'e) As ferramentas são adequadas, usadas corretamente e estão em boas condições?',
+ 'f) Há riscos no ambiente: respingos, gases tóxicos, vapores, fumos, poeiras, calor ou irradiações?',
+ 'g) Pode ocorrer alguma perda ou falha que diminua a eficiência ou a qualidade?'
+];
+
+/* ---------------- assistente: dicas por palavra-chave (2ª coluna) ---------------- */
+const HINTS2 = [
+ {re:/(ácid|acid|h2so4|h₂so₄|hcl|sulfúr|clorídr|acétic|naoh|hidróx|base|alcal|soda)/i, h:['Respingo de ácido/base na pele ou nos olhos?','Vapores irritantes ao abrir o frasco concentrado?','Derramamento sobre a bancada?']},
+ {re:/(aquec|bunsen|chama|bico|tela|tripé|tripe|ebul|ferv|acender|quente)/i, h:['Queimadura por contato com tela, tripé ou vidraria quente?','Projeção de líquido em ebulição?','Vazamento de gás ou chama perto de inflamáveis?']},
+ {re:/(etanol|álcool|alcool|gasolina|butanol|inflam|solvente|óleo)/i, h:['Incêndio de vapores inflamáveis perto de chama?','Inalação de vapores do solvente?']},
+ {re:/(iodo|sublim|vapor|gás|gases|capela|fumaça)/i, h:['Inalação de vapores tóxicos?','Capela desligada ou exaustão insuficiente?']},
+ {re:/(pipet|pera|pêra|pipetador)/i, h:['Aspiração do líquido pela boca?','Quebra da pipeta ao encaixar a pera, com corte na mão?','Erro de volume (menisco, bolha, pipeta molhada)?']},
+ {re:/(bureta|menisco|titul|zerar|leitura|\bler\b|anotar|registrar)/i, h:['Erro de leitura por paralaxe ou bolha de ar?','Resultado incorreto (perda de qualidade)?','Vazamento pela torneira da bureta?']},
+ {re:/(béquer|bequer|vidr|proveta|balão|balao|erlenmeyer|funil|kitassato|tubo de ensaio|vidro de relógio|bastão|termômetro)/i, h:['Quebra da vidraria e corte nas mãos?','Vidraria trincada ou suja alterando o resultado?']},
+ {re:/(balança|balanca|pesar|tarar|massa|pesagem)/i, h:['Erro de pesagem (balança desnivelada, prato sujo, porta aberta)?','Derramar reagente sobre o prato e danificar a balança?']},
+ {re:/(vácuo|vacuo|büchner|buchner|sucção|succao|trompa)/i, h:['Implosão do kitassato sob vácuo?','Refluxo de água para dentro do kitassato?']},
+ {re:/(agit|rolha|tampa|decant|separaç|torneira|válvula)/i, h:['Pressão interna ao agitar com a tampa (projeção ao abrir)?','Vazamento ou abertura indevida da torneira/válvula?','Perda de uma das fases (separação incompleta)?']},
+ {re:/(descart|resíduo|residuo|lavar|limpar|limpeza|pia)/i, h:['Descarte incorreto contaminando o ambiente?','Contato com resíduo químico durante a lavagem?']},
+ {re:/(zinco|estanho|cobre|nitrato|metal|\bzn\b|\bsn\b|\bcu\b)/i, h:['Desprendimento de gás (H₂) e respingos da solução?','Troca de tubos ou de reagentes (resultado errado)?']},
+ {re:/(transfer|despej|verter|adicion|complet|encher|colocar)/i, h:['Derramar ou respingar durante a transferência?','Perda de material (resultado alterado)?','Ultrapassar o volume (ex.: passar do menisco do balão)?']},
+ {re:/(suporte|garra|montar|montagem|anel|fixar)/i, h:['Queda do conjunto por montagem instável?','Garra apertada demais quebrando a vidraria?']},
+ {re:/(ph|phmetro|eletrodo)/i, h:['Dano ao eletrodo do pHmetro (bulbo batido ou seco)?','Leitura errada por falta de calibração?']},
+ {re:/(rótul|rotul|identific|numerar|etiquet)/i, h:['Troca de frascos ou tubos por falta de identificação?']},
+ {re:/(calcul|cálcul|conta)/i, h:['Erro nos cálculos levando a concentração errada?']}
+];
+
+/* ---------------- assistente: perguntas-guia por tipo de risco (3ª coluna) ---------------- */
+const HINTS3 = [
+ {re:/(queimad|resping|contato|pele|olho|corros|ácid|acid|base|químic|quimic)/i, h:['Qual EPI ESPECÍFICO (tipo de luva, óculos de ampla visão, jaleco de manga longa)?','Onde fazer a operação (capela, bancada)?','Qual a sequência segura (ex.: ácido sobre a água, aos poucos)?','O que fazer se acontecer (lava-olhos, chuveiro de emergência, avisar o professor)?']},
+ {re:/(quebr|corte|trinc|vidr)/i, h:['Como inspecionar o material antes de usar?','Como segurar/apoiar para não quebrar?','Onde descartar vidro quebrado?']},
+ {re:/(erro|leitura|medida|pesag|resultado|qualidade|perda|incorret|paralaxe|bolha)/i, h:['Qual o critério correto (menisco na altura dos olhos, tarar, nivelar)?','Como conferir (repetir, triplicata, comparar com colega)?']},
+ {re:/(incênd|incend|fogo|inflam|chama)/i, h:['Qual condição em relação à chama (apagar o bico antes, distância)?','Onde está o extintor/manta e como agir?']},
+ {re:/(inal|vapor|gás|gases|tóxic|toxic|fumo)/i, h:['A operação deve ser feita na capela ligada?','O frasco deve ficar fechado quando não estiver em uso?']},
+ {re:/(aspira|boca)/i, h:['Qual acessório usar para pipetar (pera, pipetador)?']},
+ {re:/(descart|ambient|resíduo|residuo|contamin)/i, h:['Em qual recipiente de resíduo descartar? Ele está rotulado?']},
+ {re:/(queda|caír|cair|instáv|instav|tomb)/i, h:['Como montar/fixar para ficar estável?','Onde posicionar (longe da borda da bancada)?']},
+ {re:/(tempo|atraso|demora)/i, h:['O que separar ou conferir antes para não perder tempo?']},
+ {re:/(implos|vácuo|vacuo|pressão|pressao)/i, h:['Como verificar a vidraria antes de aplicar vácuo/pressão?','Como aliviar a pressão com segurança?']}
+];
+
+const ETAPAS_NATURAIS = [
+ {k:'EPI no início', re:/(epi|jaleco|avental|óculos|oculos|luva)/i, dica:'Vestir/separar os EPI antes de começar.'},
+ {k:'Separar e inspecionar materiais', re:/(separar|selecionar|verificar|conferir|inspecionar|providenciar)/i, dica:'Separar vidrarias e reagentes e verificar se estão em condições.'},
+ {k:'Consultar rótulo/FISPQ ou roteiro', re:/(fispq|rótulo|rotulo|roteiro|ler |consultar|calcular|cálculo)/i, dica:'Ler o roteiro, os rótulos ou a FISPQ / fazer os cálculos antes.'},
+ {k:'Registrar resultados', re:/(anotar|registrar|ler |leitura|observar)/i, dica:'Anotar as leituras/observações.'},
+ {k:'Descartar resíduos', re:/(descart|resíduo|residuo)/i, dica:'Descartar resíduos no recipiente correto.'},
+ {k:'Lavar, guardar e organizar', re:/(lavar|limpar|guardar|organizar|desligar|desmontar)/i, dica:'Lavar a vidraria, desligar equipamentos e deixar a bancada limpa.'}
+];
+
+/* ================================================================
+   ESTADO
+   ================================================================ */
+const LS_KEY = 'itr_cotel_v1';
+const SCREENS = ['Identificação','Aprender','Procedimento','1ª coluna','2ª coluna','3ª coluna','Revisão crítica','Enviar'];
+let uid = 1;
+const nid = p => p + Date.now().toString(36) + (uid++).toString(36);
+function genCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<5;i++) s+=a[Math.floor(Math.random()*a.length)]; return 'ITR-'+s; }
+function today(){ const d=new Date(); return d.toLocaleDateString('pt-BR'); }
+function newState(){
+  return {codigo:genCode(), screen:0,
+    ident:{turma:'',grupo:'',integrantes:[{nome:'',num:''},{nome:'',num:''},{nome:'',num:''}]},
+    exp:{code:'',outro:''},
+    header:{titulo:'',numero:'',rev:'00',data:today()},
+    steps:[], quiz:{ans:{}, first:{}}, seen:{},
+    review:{checks:[false,false,false,false], mudancas:'', novos:''},
+    startedAt:Date.now(), envios:0, lastSend:null};
+}
+let S;
+try{ S = JSON.parse(localStorage.getItem(LS_KEY)) || newState(); }catch(e){ S = newState(); }
+let saveT=null;
+function save(){
+  clearTimeout(saveT);
+  saveT = setTimeout(()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); $('#saved').textContent='salvo '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ $('#saved').textContent='(rascunho não salvo neste navegador)'; } }, 300);
+}
+function apiUrl(){
+  try{ const p=new URLSearchParams(location.search).get('api'); if(p){ localStorage.setItem('itr_api',p); return p; } const l=localStorage.getItem('itr_api'); if(l) return l; }catch(e){}
+  return API_URL;
+}
+
+/* ================================================================
+   UTILITÁRIOS
+   ================================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const words = s => (s||'').trim().split(/\s+/).filter(Boolean);
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); }
+function expObj(){ return EXPS.find(e=>e.c===S.exp.code); }
+function expLabel(){ const e=expObj(); if(!e) return ''; return e.c==='OUT' ? 'Outro: '+S.exp.outro : e.d.split('·')[0].trim()+' – '+e.t; }
+function itemNum(stepIdx, step, k){ return step.items.length>1 ? (stepIdx+1)+'.'+(k+1) : String(stepIdx+1); }
+
+/* ================================================================
+   ASSISTENTE DE LÓGICA — validações
+   ================================================================ */
+const NAO_VERBO = new Set(['por','flor','melhor','pior','maior','menor','valor','calor','vapor','cor','exterior','interior','anterior','posterior','superior','inferior','mar','lugar','par','bar','ar','termômetro','professor','indicador','condutor','motor','recipiente','acessório','titular','sor','colar','pilar','polar','molar','singular','regular','auxiliar','familiar','similar','primeiro','depois','antes','béquer','bequer','becker','erlenmeyer','büchner','buchner','açúcar','acucar','celular','ar-condicionado','éter','eter','cateter','líder','lider','mulher','qualquer','sobre','entre','menor','maior']);
+function isInfinitivo(w){
+  if(!w) return false;
+  w = w.toLowerCase().replace(/[^a-zà-úç\-]/gi,'');
+  const base = w.split('-')[0];
+  if(['pôr','por-se','pôr-se'].includes(w)) return true;
+  if(NAO_VERBO.has(base)) return false;
+  if(/(dor|tor|sor)$/.test(base)) return false; // agitador, extintor, exaustor…
+  return /(ar|er|ir|or|ôr)$/.test(base) && base.length>=3;
+}
+const RE_INTENCAO = /\b(cuidado|cuidadoso|cuidadosa|cuidadosamente|aten[çc][ãa]o|atento|atenta|cautela|cauteloso|cautelosa|alerta|com calma|tranquilo|prestar aten[çc][ãa]o|ter cuidado|tomar cuidado|lembre|lembrar de)\b/i;
+const RE_RELATORIO = /^(\S+)(ou|eu|iu)-se\b/i;
+const RE_MEDIDA = /^(usar|utilizar|vestir|colocar|evitar|manter|fazer|ter|n[ãa]o|sempre|nunca|verificar|conferir|proteger|lavar|separar|pedir|chamar)\b/i;
+const RE_GENERICO = /^(acidente|acidentes|risco|riscos|perigo|perigos|les[ãa]o|les[õo]es|perda|perdas|machucar|dano|danos|problema|problemas)\.?$/i;
+const RE_EPI_GENERICO = /\b(usar|utilizar)\s+(o |os |os devidos |o devido |)epi'?s?\b(?!\s*(:|como|tipo))/i;
+const RE_VER = /^ver\s+(procedimento|potencial|item|etapa)\b/i;
+
+function vStep(t){
+  const a=[]; const w=words(t);
+  if(!w.length){ a.push({l:'err',m:'Etapa vazia. Escreva a ação ou remova a etapa.'}); return a; }
+  const first=w[0];
+  if(RE_RELATORIO.test(first)) a.push({l:'warn',m:'“'+first+'” é linguagem de relatório (voz passiva, passado). Na ITr, use o infinitivo: diga o que FAZER (ex.: “Colocar”, “Pesar”).'});
+  else if(!isInfinitivo(first)) a.push({l:'warn',m:'Regra 4: inicie com um verbo de ação no infinitivo (ex.: Pesar, Transferir, Verificar, Equipar-se).'});
+  if(RE_INTENCAO.test(t)) a.push({l:'warn',m:'“Cuidado/atenção” não é etapa. A 1ª coluna diz só O QUE fazer; os cuidados vão para a 3ª coluna.'});
+  if(w.length>28) a.push({l:'warn',m:'Regra 3: excesso de detalhes ('+w.length+' palavras). Deixe aqui só a ação; o “como fazer com segurança” vai para a 3ª coluna.'});
+  if(w.length<2) a.push({l:'warn',m:'Muito curta: complete com o objeto da ação (ex.: “Lavar a bureta”).'});
+  const verbos = w.filter((x,i)=> i>0 && isInfinitivo(x)).length + (isInfinitivo(first)?1:0);
+  if(verbos>=3) a.push({l:'info',m:'Há '+verbos+' ações nesta frase. Talvez sejam etapas diferentes — avalie dividir.'});
+  return a;
+}
+function vRisk(t){
+  const a=[]; const w=words(t);
+  if(!w.length){ a.push({l:'err',m:'Descreva o potencial de perda ou acidente (ou remova este item).'}); return a; }
+  if(RE_VER.test(t)) return a;
+  if(RE_MEDIDA.test(t)) a.push({l:'warn',m:'Isto parece uma MEDIDA preventiva. Na 2ª coluna escreva o que pode dar errado (o risco/a perda); a medida vai para a 3ª coluna.'});
+  if(RE_INTENCAO.test(t)) a.push({l:'warn',m:'Advertências (“cuidado”, “atenção”) não descrevem um risco. Diga qual lesão ou perda pode ocorrer.'});
+  if(RE_GENERICO.test(t.trim()) || w.length<3) a.push({l:'warn',m:'Muito genérico. Seja específico: QUAL lesão/perda, em QUE parte do corpo ou do resultado, POR QUAL causa? Ex.: “Queimadura nos olhos por respingo de ácido”.'});
+  return a;
+}
+function vProc(t){
+  const a=[]; const w=words(t);
+  if(!w.length){ a.push({l:'err',m:'Escreva o procedimento recomendado para este risco.'}); return a; }
+  if(RE_VER.test(t)) return a;
+  if(RE_INTENCAO.test(t)) a.push({l:'warn',m:'Manual do PAT: descreva AÇÕES e não intenções. Troque “cuidado/atenção/cautela” por O QUE fazer e COMO fazer.'});
+  let f=w[0]; if(/^(n[ãa]o|nunca|sempre)$/i.test(f) && w[1]) f=w[1];
+  const f0 = f.replace(/^[a-z]\)\s*/i,'');
+  if(!isInfinitivo(f0) && !/^(uso|a\)|b\))/i.test(w[0])) a.push({l:'info',m:'Prefira começar com verbo de ação no infinitivo (ex.: Usar, Adicionar, Posicionar, Conferir).'});
+  if(RE_EPI_GENERICO.test(t)) a.push({l:'warn',m:'“Usar EPI” é genérico. Diga QUAL EPI (ex.: luva nitrílica, óculos de ampla visão, jaleco de manga longa).'});
+  if(w.length<4) a.push({l:'warn',m:'Curto demais para orientar alguém. Diga o que fazer e como fazer.'});
+  return a;
+}
+const STOP = new Set(['para','pela','pelo','com','sem','que','dos','das','nos','nas','uma','por','como','sobre','entre','após','antes','durante','quando','mais','menos','muito','cada','todo','toda','este','esta','esse','essa','pode','ocorrer','possível','possivel']);
+const stems = t => new Set(words((t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ')).filter(w=>w.length>=4 && !STOP.has(w)).map(w=>w.slice(0,5)));
+function vCoer(step, risk, proc){
+  if(!words(proc).length || RE_VER.test(proc) || RE_VER.test(risk)) return [];
+  const a=stems(step+' '+risk), b=stems(proc); for(const x of b) if(a.has(x)) return [];
+  return [{l:'info',m:'Recomendação 4: confiram se este procedimento evita exatamente o potencial ao lado — não há nenhuma palavra em comum entre eles.'}];
+}
+function vJust(t){ return words(t).length<3 ? [{l:'err',m:'Justifique em uma frase por que esta etapa não tem potencial de perda (lembre: quase toda operação tem algum).'}] : []; }
+
+function alertsHTML(a, okMsg){
+  if(!a.length) return okMsg ? '<div class="al ok"><i>✓</i><span>'+okMsg+'</span></div>' : '';
+  const ic={err:'!',warn:'⚠',info:'i'};
+  return a.map(x=>'<div class="al '+x.l+'"><i>'+ic[x.l]+'</i><span>'+esc(x.m)+'</span></div>').join('');
+}
+
+/* métricas globais */
+function analyze(){
+  const r={c1:{n:0,warn:0,err:0}, c2:{n:0,warn:0,err:0}, c3:{n:0,warn:0,err:0}, issues:[], semRisco:0};
+  S.steps.forEach((s,i)=>{
+    const a1=vStep(s.text); r.c1.n++; tally(r.c1,a1,i,'1ª coluna','Etapa '+(i+1),3);
+    if(s.noRisk){ r.semRisco++; const aj=vJust(s.just); r.c2.n++; tally(r.c2,aj,i,'2ª coluna','Etapa '+(i+1)+' (sem potencial)',4); }
+    else {
+      if(!s.items.length){ r.c2.n++; r.c2.err++; r.issues.push({col:'2ª coluna',where:'Etapa '+(i+1),m:'Sem potencial registrado.',l:'err',scr:4}); }
+      s.items.forEach((it,k)=>{
+        const n=itemNum(i,s,k);
+        r.c2.n++; tally(r.c2,vRisk(it.risk),i,'2ª coluna','Item '+n,4);
+        r.c3.n++; tally(r.c3,vProc(it.proc),i,'3ª coluna','Item '+n,5);
+      });
+    }
+  });
+  function tally(c,a,i,col,where,scr){
+    if(a.some(x=>x.l==='err')) c.err++; else if(a.some(x=>x.l==='warn')) c.warn++;
+    a.filter(x=>x.l!=='info').forEach(x=>r.issues.push({col,where,m:x.m,l:x.l,scr}));
+  }
+  const pct=c=> c.n? Math.round(100*(c.n-c.warn-c.err)/c.n) : 0;
+  r.p1=pct(r.c1); r.p2=pct(r.c2); r.p3=pct(r.c3);
+  r.indice = Math.round((r.p1+r.p2+r.p3)/3);
+  r.nItens = S.steps.reduce((t,s)=>t+(s.noRisk?0:s.items.length),0);
+  return r;
+}
+
+/* ================================================================
+   PORTÕES (o que precisa estar pronto para avançar)
+   ================================================================ */
+function gate(i){ // retorna mensagem de bloqueio para SAIR da tela i (ou '' se ok)
+  switch(i){
+    case 0: {
+      if(!S.ident.turma.trim()) return 'Informe a turma.';
+      if(!S.ident.grupo.trim()) return 'Informe o nome ou número do grupo.';
+      if(!S.ident.integrantes.some(p=>p.nome.trim())) return 'Informe pelo menos um integrante.';
+      return '';
+    }
+    case 1: {
+      const pend = QUIZ.filter((q,k)=>S.quiz.ans[k]!==q.a).length;
+      return pend? 'Acerte as '+QUIZ.length+' questões de verificação ('+pend+' pendente'+(pend>1?'s':'')+').' : '';
+    }
+    case 2: {
+      if(!S.exp.code) return 'Escolha o procedimento do laboratório.';
+      if(S.exp.code==='OUT' && words(S.exp.outro).length<3) return 'Descreva o procedimento escolhido.';
+      if(words(S.header.titulo).length<3) return 'Escreva o título da ITr (o trabalho a ser executado).';
+      return '';
+    }
+    case 3: {
+      const filled=S.steps.filter(s=>words(s.text).length);
+      if(filled.length<6) return 'A 1ª coluna precisa de pelo menos 6 etapas ('+filled.length+' até agora).';
+      if(filled.length!==S.steps.length) return 'Há etapas vazias: preencha ou remova.';
+      return '';
+    }
+    case 4: {
+      for(let k=0;k<S.steps.length;k++){ const s=S.steps[k];
+        if(s.noRisk){ if(vJust(s.just).length) return 'Etapa '+(k+1)+': justifique a ausência de potencial.'; }
+        else { if(!s.items.length) return 'Etapa '+(k+1)+': registre ao menos um potencial (ou marque “sem potencial”).';
+               if(s.items.some(it=>!words(it.risk).length)) return 'Etapa '+(k+1)+': há potencial em branco.'; }
+      } return '';
+    }
+    case 5: {
+      for(let k=0;k<S.steps.length;k++){ const s=S.steps[k]; if(s.noRisk) continue;
+        const j=s.items.findIndex(it=>!words(it.proc).length); if(j>=0) return 'Item '+itemNum(k,s,j)+': falta o procedimento recomendado.'; }
+      return '';
+    }
+    case 6: {
+      if(S.review.checks.some(c=>!c)) return 'Marque as 4 verificações da revisão crítica.';
+      if(words(S.review.mudancas).length<8) return 'Descreva o que o grupo mudou na revisão (mín. 8 palavras).';
+      return '';
+    }
+    default: return '';
+  }
+}
+function maxReachable(){ let i=0; while(i<SCREENS.length-1 && !gate(i)) i++; return i; }
+
+/* ================================================================
+   RENDERIZAÇÃO
+   ================================================================ */
+function render(){
+  if(S.screen>maxReachable()) S.screen=maxReachable();
+  renderChrome();
+  const fns=[scrIdent,scrLearn,scrProc,scrCol1,scrCol2,scrCol3,scrReview,scrSend];
+  $('#main').innerHTML = fns[S.screen]();
+  renderSide();
+  window.scrollTo({top:0});
+  save();
+}
+function renderChrome(){
+  $('#topCode').textContent = S.codigo + (S.ident.grupo? ' · Grupo '+S.ident.grupo : '');
+  const mr=maxReachable();
+  $('#stepper').innerHTML = SCREENS.map((n,i)=>
+    '<button class="st '+(i===S.screen?'cur':(i<mr||(i<=mr&&i<S.screen)?'done':''))+'" data-act="go" data-to="'+i+'" '+(i>mr?'disabled':'')+'><b>'+String(i+1).padStart(2,'0')+'</b>'+n+'</button>').join('');
+  $('#btnPrev').disabled = S.screen===0;
+  const g = gate(S.screen);
+  const last = S.screen===SCREENS.length-1;
+  $('#btnNext').style.display = last?'none':'';
+  $('#btnNext').disabled = !!g;
+  $('#why').className='why'+(g?'':' ok');
+  $('#why').textContent = last? '' : (g || 'Pronto para avançar.');
+  $('#wrap').classList.toggle('single', ![2,3,4,5].includes(S.screen));
+}
+
+/* ---------- 0: identificação ---------- */
+function scrIdent(){
+  const I=S.ident;
+  return `
+  <div class="card">
+    <div class="kicker">Atividade auto-instrucional</div>
+    <h2>Elaboração de uma Instrução de Trabalho (ITr)</h2>
+    <p class="lead">Nesta aula o grupo vai elaborar uma ITr técnica para um procedimento do Laboratório de Química Geral Experimental, seguindo a metodologia do <b>Programa Análise do Trabalho (PAT)</b>.</p>
+    <div class="callout">
+      <p><b>Como funciona:</b> 1) estude os conceitos e responda à verificação; 2) escolha o procedimento; 3) construa a ITr coluna por coluna, com a ajuda do assistente; 4) faça a revisão crítica; 5) envie. O envio vai direto para o professor — não é preciso mandar PDF por e-mail.</p>
+      <p>O trabalho fica salvo automaticamente <b>neste navegador</b>. Use sempre o mesmo computador e o mesmo navegador do grupo.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Identificação do grupo</h3>
+    <div class="grid2">
+      <div><label class="f" for="turma">Turma</label><input class="inp" id="turma" data-bind="ident.turma" value="${esc(I.turma)}" placeholder="ex.: 1º Química A"></div>
+      <div><label class="f" for="grupo">Grupo</label><input class="inp" id="grupo" data-bind="ident.grupo" value="${esc(I.grupo)}" placeholder="ex.: 3"></div>
+    </div>
+    <label class="f">Integrantes <span class="muted">(a ITr é uma atividade de equipe)</span></label>
+    ${I.integrantes.map((p,k)=>`
+      <div class="grid2" style="grid-template-columns:3fr 1fr;margin-bottom:8px">
+        <input class="inp" data-bind="ident.integrantes.${k}.nome" value="${esc(p.nome)}" placeholder="Nome completo" aria-label="Nome do integrante ${k+1}">
+        <input class="inp" data-bind="ident.integrantes.${k}.num" value="${esc(p.num)}" placeholder="Nº" aria-label="Número do integrante ${k+1}">
+      </div>`).join('')}
+    <div class="row">
+      <button class="btn sm" data-act="addMember">+ integrante</button>
+      ${I.integrantes.length>1?'<button class="btn sm ghost" data-act="delMember">− remover último</button>':''}
+    </div>
+  </div>
+  <div class="row"><button class="btn sm ghost danger" data-act="reset">Recomeçar do zero (apaga o rascunho deste navegador)</button></div>`;
+}
+
+/* ---------- 1: aprender ---------- */
+function lesson(n,title,body){ const seen=S.seen[n]; return `<details class="lesson ${seen?'seen':''}" data-lesson="${n}"><summary><span class="n">${seen?'✓':n}</span>${title}<span class="chev">›</span></summary><div class="body">${body}</div></details>`; }
+function scrLearn(){
+  const ex = EXEMPLO.map((r,i)=>{
+    if(!r.it.length) return `<tr><td><span class="n">${i+1}</span>${r.e}</td><td style="text-align:center">———</td><td style="text-align:center">———</td></tr>`;
+    return r.it.map((it,k)=>`<tr>${k===0?`<td rowspan="${r.it.length}"><span class="n">${i+1}</span>${r.e}</td>`:''}<td><span class="n">${r.it.length>1?(i+1)+'.'+(k+1):i+1}</span>${it[0]}</td><td><span class="n">${r.it.length>1?(i+1)+'.'+(k+1):i+1}</span>${it[1]}</td></tr>`).join('');
+  }).join('');
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 2 · Estudo</div>
+    <h2>O que é e como se faz uma ITr</h2>
+    <p class="lead">Abra cada tópico, leia com o grupo e depois responda à verificação no fim da página. Base: <i>Manual de Aplicação do Programa Análise do Trabalho</i> (EEL/USP).</p>
+  </div>
+  ${lesson(1,'A ITr: trabalhar por antecipação',`
+    <p>No PAT, de cada <b>Análise do Trabalho (AT)</b> resulta uma <b>Instrução de Trabalho (ITr)</b>. Uma ITr bem elaborada <b>avalia possíveis perdas ou acidentes antes que eles aconteçam</b> e estabelece as precauções técnicas para cada etapa do trabalho, de modo que quem executa tenha sempre o domínio das circunstâncias.</p>
+    <div class="callout orange"><p>Para quem trabalha com ITr, perdas e acidentes não são questão de sorte ou azar: são <b>anormalidades evitáveis</b>. A ITr é a visão técnica do trabalho, com a noção exata dos riscos e da maneira profissional de evitá-los ou controlá-los.</p></div>
+    <p>O PAT apoia-se num tripé: <b>Segurança · Responsabilidade · Qualidade</b> = <b>Profissionalismo</b>. Por isso a ITr não trata só de acidentes: trata também de <b>perdas</b> (de material, de tempo, de qualidade do resultado).</p>`)}
+  ${lesson(2,'Três perguntas básicas',`
+    <ol class="rules">
+      <li><b>Quando aplicar a ITr?</b> Em todos os trabalhos técnicos ou administrativos, de rotina ou não — em especial nos trabalhos novos e nos revisados.</li>
+      <li><b>Por onde começar?</b> Pelas atividades de maior potencial de perdas e acidentes. Mas até as “simples” merecem ITr: <i>não existem operações sem risco</i>.</li>
+      <li><b>É individual ou de equipe?</b> De <b>equipe</b>: a força da ITr está na discussão, no questionamento, na autocrítica e na responsabilidade solidária.</li>
+    </ol>`)}
+  ${lesson(3,'A estrutura do impresso: cabeçalho e três colunas',`
+    <p><b>Cabeçalho:</b> “Instruções de Trabalho”, a descrição do trabalho, a sigla do setor, o número da ITr e o número/data da revisão.</p>
+    <div class="cols3">
+      <div><h4>1ª · Sequência das etapas de trabalho</h4>O que fazer, passo a passo, na ordem real.</div>
+      <div><h4>2ª · Potencial de perdas e acidentes</h4>O que pode dar errado em cada etapa.</div>
+      <div><h4>3ª · Procedimentos recomendados e/ou pontos principais</h4>O que fazer e como fazer para evitar cada perda/acidente.</div>
+    </div>
+    <p class="muted">Existe também a ITr 2 (só 1ª e 3ª colunas), usada para trabalhos rotineiros já consolidados. Nesta atividade vocês farão a <b>ITr 1 completa</b>, porque o trabalho ainda é novo para o grupo.</p>`)}
+  ${lesson(4,'1ª coluna: a sequência das ações',`
+    <p>A redação obedece, com rigor, a quatro regras:</p>
+    <ol class="rules">
+      <li>Verificar com exatidão <b>qual é o trabalho</b> a ser executado.</li>
+      <li><b>Dividir</b> o trabalho em etapas sucessivas.</li>
+      <li>Descrever, <b>sem excesso de detalhes</b>, o que deve ser feito em cada etapa.</li>
+      <li>Iniciar cada etapa com um <b>verbo que denote ação</b> (Solicitar, Verificar, Colocar, Pesar, Transferir…).</li>
+    </ol>
+    <div class="callout"><p>Sem excessos e sem omissões: a divisão deve ser objetiva e balanceada, mas conter <b>todas as etapas naturais</b> da operação — inclusive as que a apostila não escreve, como vestir os EPI, separar e inspecionar o material, descartar resíduos e limpar a bancada.</p></div>
+    <div class="callout orange"><p><b>ITr ≠ relatório.</b> No relatório vocês escrevem no passado e na voz passiva (“Pipetou-se 25 mL…”). Na ITr, escreve-se o que <b>fazer</b>, no infinitivo (“Pipetar 25,0 mL…”).</p></div>`)}
+  ${lesson(5,'2ª coluna: na detecção dos riscos, os detalhes são importantes',`
+    <p>É talvez o momento mais importante da discussão: estabelecer, com exatidão, <b>todos</b> os potenciais de perdas e acidentes de cada etapa. Aqui a discussão é feita <b>sem a preocupação com as medidas preventivas</b> — isso fica para depois.</p>
+    <p>Para cada etapa, façam as perguntas do manual:</p>
+    <ul>${PERG.map(p=>'<li>'+p+'</li>').join('')}</ul>
+    <div class="callout green"><p><b>Fórmula útil:</b> <i>o que acontece</i> + <i>por qual causa</i>. Ex.: “Queimadura nos olhos <u>por respingo de ácido</u> durante a transferência”, “Erro de volume <u>por leitura do menisco fora da altura dos olhos</u>”.</p></div>`)}
+  ${lesson(6,'3ª coluna: roteiro de competência',`
+    <p>Descrevam <b>ações e não intenções</b>. Em vez de “Cuidado!”, “Seja cauteloso!”, “Esteja alerta!”, sejam específicos: <b>o que fazer e como fazer</b>, com o material e o EPI exatos.</p>
+    <p>Quatro recomendações para boas ITr:</p>
+    <ol class="rules">
+      <li>Prever a <b>melhor maneira</b> de executar o trabalho, definindo os cuidados de cada etapa.</li>
+      <li>Rever a possibilidade e/ou conveniência de <b>mudar o procedimento tradicional</b>.</li>
+      <li>Avaliar os controles estabelecidos para detectar <b>riscos não apontados</b>.</li>
+      <li><b>Associar cada precaução a um risco específico</b> (mesma numeração: 7.1 ↔ 7.1).</li>
+    </ol>`)}
+  ${lesson(7,'Método e disciplina: uma coisa por vez',`
+    <p>A montagem da ITr exige disciplina: <b>nunca passar para a 2ª coluna sem concluir a 1ª</b>, e não entrar na 3ª enquanto houver dúvidas sobre os riscos. Na 2ª coluna, o levantamento segue a mesma sequência das etapas.</p>
+    <p>Por isso este sistema libera as colunas em ordem. Vocês podem voltar e corrigir, mas a construção segue 1ª → 2ª → 3ª.</p>`)}
+  ${lesson(8,'Exemplo real (e um olhar crítico)',`
+    <p>Trecho de uma ITr do manual: <b>preparação, por alunos, de 200 mL de solução 0,1 M de ácido sulfúrico</b> (DEQUI, Rev. 00, fev/2003). Repare na numeração 4.1/4.2 e nas linhas “———”.</p>
+    <div class="table-scroll"><table class="itr"><thead><tr><th>Sequência das etapas de trabalho</th><th>Potencial de perdas e acidentes</th><th>Procedimento recomendado e/ou pontos principais</th></tr></thead><tbody>${ex}</tbody></table></div>
+    <div class="callout orange" style="margin-top:12px"><p><b>Sempre é possível aperfeiçoar uma ITr.</b> Observem: a etapa 6 ficou sem potencial — mas não haveria risco de encher demais o béquer? E “luva de látex” é a luva certa para ácido sulfúrico concentrado? Consultem a FISPQ. Este é o espírito da revisão crítica. Por isso este procedimento <b>não</b> está entre as opções da atividade.</p></div>`)}
+  <div class="card" id="quiz">
+    <div class="kicker">Verificação</div>
+    <h3>Responda às ${QUIZ.length} questões</h3>
+    <p class="muted">Se errar, leia o comentário e tente de novo. O professor verá quantas o grupo acertou de primeira.</p>
+    ${QUIZ.map((q,k)=>{ const ans=S.quiz.ans[k]; const done=ans===q.a;
+      return `<div class="q"><b>${k+1}. ${q.q}</b><div class="opts">${q.o.map((o,j)=>`<button class="opt ${ans===j?(j===q.a?'right':'wrong'):''}" data-act="quiz" data-q="${k}" data-o="${j}" ${done?'disabled':''}>${String.fromCharCode(97+j)}) ${o}</button>`).join('')}</div>
+      ${ans!==undefined?`<div class="fb ${done?'right':'wrong'}">${done?'<b>Correto.</b> ':'<b>Ainda não.</b> '}${done?q.fb:'Releia o tópico correspondente e tente outra alternativa.'}</div>`:''}</div>`;}).join('')}
+  </div>`;
+}
+
+/* ---------- 2: procedimento ---------- */
+function scrProc(){
+  const e=expObj(); const H=S.header;
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 3 · Escolha do trabalho</div>
+    <h2>Qual procedimento o grupo vai analisar?</h2>
+    <p class="lead">Regra 1 da 1ª coluna: verificar <b>com exatidão</b> qual é o trabalho. Escolham um procedimento da apostila de Química Geral Experimental.</p>
+    <div class="exps">${EXPS.map(x=>`<button class="exp ${S.exp.code===x.c?'sel':''}" data-act="pickExp" data-c="${x.c}"><span class="c">${x.c}</span><span class="t">${x.t}</span><span class="d">${x.d}</span></button>`).join('')}</div>
+    ${S.exp.code==='OUT'?`<label class="f" for="outro">Descreva o procedimento</label><textarea class="inp" id="outro" data-bind="exp.outro" rows="2" placeholder="ex.: Lavagem e secagem de vidrarias após a aula prática">${esc(S.exp.outro)}</textarea>`:''}
+  </div>
+  ${e?`<div class="card">
+    <h3>Cabeçalho da ITr</h3>
+    <p class="muted">O título descreve o trabalho a ser executado, como no exemplo “Preparação, por alunos, de 200 mL de solução 0,1 M de ácido sulfúrico, em laboratório de ensino”.</p>
+    <label class="f" for="titulo">Título / descrição do trabalho</label>
+    <textarea class="inp" id="titulo" data-bind="header.titulo" rows="2" placeholder="ex.: Determinação, por alunos, da densidade de líquidos em laboratório de ensino">${esc(H.titulo)}</textarea>
+    <div class="grid4">
+      <div><label class="f">Setor</label><input class="inp" value="COTEL · Lab. Química Geral" disabled></div>
+      <div><label class="f" for="numero">ITr nº</label><input class="inp" id="numero" data-bind="header.numero" value="${esc(H.numero)}" placeholder="01/G${esc(S.ident.grupo)}"></div>
+      <div><label class="f" for="rev">Revisão</label><input class="inp" id="rev" data-bind="header.rev" value="${esc(H.rev)}"></div>
+      <div><label class="f" for="data">Data</label><input class="inp" id="data" data-bind="header.data" value="${esc(H.data)}"></div>
+    </div>
+  </div>`:''}`;
+}
+
+/* ---------- 3: coluna 1 ---------- */
+function scrCol1(){
+  if(!S.steps.length){ for(let k=0;k<3;k++) S.steps.push({id:nid('s'),text:'',items:[],noRisk:false,just:'',ponto:''}); }
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 4 · 1ª coluna</div>
+    <h2>Sequência das etapas de trabalho</h2>
+    <p>Escrevam as etapas <b>na ordem exata em que acontecem na prática</b> — do momento em que o grupo chega à bancada até deixá-la limpa. O assistente avisa quando uma frase foge das regras.</p>
+    <div class="callout"><p><b>A apostila descreve o experimento; a ITr descreve o trabalho inteiro.</b> Olhem a lista “Etapas naturais” ao lado: ela mostra o que costuma faltar.</p></div>
+  </div>
+  <div class="card" id="col1">
+    ${S.steps.map((s,i)=>`
+      <div class="stp">
+        <div class="num">${i+1}</div>
+        <div>
+          <textarea class="inp" rows="2" data-step="${s.id}" placeholder="${i===0?'ex.: Vestir jaleco de manga longa e óculos de segurança':'Verbo no infinitivo + o que fazer'}" aria-label="Etapa ${i+1}">${esc(s.text)}</textarea>
+          <div class="alerts" id="al-${s.id}">${words(s.text).length?alertsHTML(vStep(s.text),'Redação adequada.'):''}</div>
+        </div>
+        <div class="tools">
+          <button class="btn" data-act="up" data-id="${s.id}" title="Mover para cima" aria-label="Mover etapa ${i+1} para cima" ${i===0?'disabled':''}>↑</button>
+          <button class="btn" data-act="down" data-id="${s.id}" title="Mover para baixo" aria-label="Mover etapa ${i+1} para baixo" ${i===S.steps.length-1?'disabled':''}>↓</button>
+          <button class="btn" data-act="ins" data-id="${s.id}" title="Inserir etapa abaixo" aria-label="Inserir etapa abaixo da ${i+1}">+</button>
+          <button class="btn danger" data-act="delStep" data-id="${s.id}" title="Excluir" aria-label="Excluir etapa ${i+1}">✕</button>
+        </div>
+      </div>`).join('')}
+    <div class="row" style="margin-top:12px"><button class="btn pri" data-act="addStep">+ Adicionar etapa</button><span class="muted">${S.steps.length} etapa(s) · mínimo 6</span></div>
+  </div>`;
+}
+
+/* ---------- 4: coluna 2 ---------- */
+function hintsFor(text, lib){ const out=[]; lib.forEach(h=>{ if(h.re.test(text)) h.h.forEach(x=>{ if(!out.includes(x)) out.push(x); }); }); return out; }
+function scrCol2(){
+  S.steps.forEach(s=>{ if(!s.noRisk && !s.items.length) s.items.push({id:nid('i'),risk:'',proc:''}); });
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 5 · 2ª coluna</div>
+    <h2>Potencial de perdas e acidentes</h2>
+    <p>Para <b>cada etapa</b>, registrem tudo o que pode dar errado: lesões <b>e</b> perdas (material, tempo, qualidade do resultado). <b>Ainda não escrevam medidas preventivas</b> — elas ficam para a 3ª coluna.</p>
+    <p class="muted">As sugestões laranjas são perguntas para o grupo discutir. Clicar nelas apenas abre um novo campo — quem escreve o risco é o grupo.</p>
+  </div>
+  ${S.steps.map((s,i)=>{
+    const hs=hintsFor(s.text,HINTS2);
+    return `<div class="sblock" id="blk-${s.id}">
+      <div class="shead"><div class="num">${i+1}</div><div class="txt">${esc(s.text)}</div></div>
+      <div class="sbody">
+        ${s.noRisk?'':s.items.map((it,k)=>`
+          <div class="risk">
+            <div class="inum">${itemNum(i,s,k)}</div>
+            <div><textarea class="inp" rows="2" data-risk="${s.id}|${it.id}" placeholder="O que pode acontecer + por qual causa" aria-label="Potencial ${itemNum(i,s,k)}">${esc(it.risk)}</textarea>
+            <div class="alerts" id="al-r-${it.id}">${words(it.risk).length?alertsHTML(vRisk(it.risk)):''}</div></div>
+            <button class="btn sm danger" data-act="delRisk" data-id="${s.id}" data-item="${it.id}" aria-label="Remover potencial ${itemNum(i,s,k)}">✕</button>
+          </div>`).join('')}
+        ${s.noRisk?'':`${hs.length?`<div class="muted" style="font-size:.82rem">Pensem nisto:</div><div class="chips">${hs.map(h=>`<button class="chip" data-act="addRisk" data-id="${s.id}">${esc(h)}</button>`).join('')}</div>`:''}
+        <button class="btn sm" data-act="addRisk" data-id="${s.id}">+ potencial</button>`}
+        <label class="norisk"><input type="checkbox" data-norisk="${s.id}" ${s.noRisk?'checked':''}> Nesta etapa o grupo não identificou potencial significativo (———)</label>
+        ${s.noRisk?`<textarea class="inp" rows="2" data-just="${s.id}" placeholder="Justifique: por que não há perda ou acidente possível nesta etapa?" style="margin-top:6px">${esc(s.just)}</textarea><div class="alerts" id="al-j-${s.id}">${alertsHTML(vJust(s.just))}</div>`:''}
+      </div></div>`;}).join('')}`;
+}
+
+/* ---------- 5: coluna 3 ---------- */
+function scrCol3(){
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 6 · 3ª coluna</div>
+    <h2>Procedimentos recomendados e/ou pontos principais</h2>
+    <p>Para <b>cada potencial</b>, escrevam a ação que o evita ou controla — com a mesma numeração. Nada de “cuidado!”: digam <b>o que fazer e como fazer</b>. Se uma medida já foi descrita, podem escrever “Ver procedimento 1”.</p>
+  </div>
+  ${S.steps.map((s,i)=>`<div class="sblock" id="blk-${s.id}">
+      <div class="shead"><div class="num">${i+1}</div><div class="txt">${esc(s.text)}</div></div>
+      <div class="sbody">
+      ${s.noRisk?`<div class="muted" style="margin-bottom:6px">Etapa sem potencial (———). Se quiserem, registrem um <b>ponto principal</b> (opcional):</div>
+        <textarea class="inp" rows="2" data-ponto="${s.id}" placeholder="Ponto principal (opcional)">${esc(s.ponto)}</textarea>`
+      : s.items.map((it,k)=>{ const g=hintsFor(it.risk,HINTS3); return `
+        <div class="pair">
+          <div class="inum">${itemNum(i,s,k)}</div>
+          <div>
+            <div class="riskro"><b>Potencial</b>${esc(it.risk)}</div>
+            <textarea class="inp" rows="2" data-proc="${s.id}|${it.id}" placeholder="Verbo de ação + o que fazer + como fazer (material/EPI específico)" aria-label="Procedimento ${itemNum(i,s,k)}">${esc(it.proc)}</textarea>
+            <div class="alerts" id="al-p-${it.id}">${words(it.proc).length?alertsHTML([...vProc(it.proc),...vCoer(s.text,it.risk,it.proc)],'Ação concreta e específica.'):''}</div>
+            <ul class="guide">${(g.length?g:['O que exatamente deve ser feito para que este potencial não aconteça?','Com qual material, EPI ou equipamento? Onde? Em que ordem?']).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul>
+          </div>
+        </div>`;}).join('')}
+      </div></div>`).join('')}`;
+}
+
+/* ---------- tabela ITr ---------- */
+function itrTable(){
+  const H=S.header;
+  const rows = S.steps.map((s,i)=>{
+    const st=`<span class="n">${i+1}.</span>${esc(s.text)}`;
+    if(s.noRisk || !s.items.length) return `<tr><td>${st}</td><td style="text-align:center">———</td><td>${s.ponto?`<span class="n">${i+1}.</span>${esc(s.ponto)}`:'<div style="text-align:center">———</div>'}</td></tr>`;
+    return s.items.map((it,k)=>`<tr>${k===0?`<td rowspan="${s.items.length}">${st}</td>`:''}<td><span class="n">${itemNum(i,s,k)}</span>${esc(it.risk)}</td><td><span class="n">${itemNum(i,s,k)}</span>${esc(it.proc)}</td></tr>`).join('');
+  }).join('');
+  return `<table class="itr"><thead>
+    <tr class="hd"><td colspan="2" class="ttl"><b>INSTRUÇÕES DE TRABALHO</b><br>${esc(H.titulo).toUpperCase()}</td><td class="meta"><b>COTEL</b><br>ITr nº ${esc(H.numero||'—')}<br>Rev. ${esc(H.rev)} · ${esc(H.data)}</td></tr>
+    <tr><th style="width:33%">Sequência das etapas de trabalho</th><th style="width:30%">Potencial de perdas e acidentes</th><th>Procedimento recomendado e/ou pontos principais</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <p style="font-size:.8rem;margin-top:8px"><b>Elaborada por:</b> ${esc(S.ident.integrantes.filter(p=>p.nome.trim()).map(p=>p.nome+(p.num?' (nº '+p.num+')':'')).join('; '))} — Turma ${esc(S.ident.turma)}, Grupo ${esc(S.ident.grupo)} · Código ${S.codigo}</p>`;
+}
+
+/* ---------- 6: revisão ---------- */
+const REV = [
+ ['Melhor maneira','Relemos a ITr inteira e a sequência representa a melhor maneira de executar o trabalho, com os cuidados definidos em cada etapa.'],
+ ['Procedimento tradicional','Discutimos se convinha mudar algo no procedimento tradicional da apostila (ordem, material, local) e registramos a decisão.'],
+ ['Riscos não apontados','Revisamos as perguntas a–g em cada etapa procurando riscos que não tinham sido apontados.'],
+ ['Associação risco ↔ medida','Conferimos que cada procedimento da 3ª coluna corresponde a um potencial específico da 2ª, com a mesma numeração.']
+];
+function scrReview(){
+  const A=analyze();
+  const meter=(p)=>`<div class="meter ${p<60?'low':p<85?'mid':''}"><span style="width:${p}%"></span></div>`;
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 7 · A ITr está pronta. Será que está?</div>
+    <h2>Revisão crítica do grupo</h2>
+    <p>O manual diz que a ITr ainda <b>não</b> está pronta quando as colunas terminam: falta a parte mais importante — a discussão, a crítica e as sugestões de todo o grupo. Usem o relatório do assistente e as quatro recomendações abaixo.</p>
+  </div>
+  <div class="card">
+    <h3>Relatório do assistente</h3>
+    <p class="muted">Percentual de entradas sem alertas em cada coluna. É um apoio à revisão, não a nota.</p>
+    <div class="score">
+      <div><div class="muted">1ª coluna · ${A.c1.n} etapas</div><div class="v">${A.p1}%</div>${meter(A.p1)}</div>
+      <div><div class="muted">2ª coluna · ${A.nItens} potenciais</div><div class="v">${A.p2}%</div>${meter(A.p2)}</div>
+      <div><div class="muted">3ª coluna · ${A.nItens} procedimentos</div><div class="v">${A.p3}%</div>${meter(A.p3)}</div>
+    </div>
+    ${A.issues.length?`<h4 style="margin-top:12px">Pontos para o grupo rever (${A.issues.length})</h4><ul class="issues">${A.issues.map(x=>`<li><span class="pill">${x.col}</span><b>${x.where}:</b> <span>${esc(x.m)}</span><button class="btn sm" data-act="go" data-to="${x.scr}">ir</button></li>`).join('')}</ul>`:'<div class="al ok"><i>✓</i><span>Nenhum alerta pendente. Ainda assim, façam a leitura crítica.</span></div>'}
+    ${A.semRisco?`<div class="al info" style="margin-top:8px"><i>i</i><span>${A.semRisco} etapa(s) marcada(s) sem potencial. Lembrem: “não existem operações sem risco”. Confirmem se é isso mesmo.</span></div>`:''}
+  </div>
+  <div class="card">
+    <h3>As quatro recomendações do manual</h3>
+    ${REV.map((r,k)=>`<label class="norisk" style="align-items:flex-start;margin:10px 0"><input type="checkbox" data-check="${k}" ${S.review.checks[k]?'checked':''} style="margin-top:5px"><span><b>${k+1}. ${r[0]}.</b> ${r[1]}</span></label>`).join('')}
+    <label class="f" for="mud">O que o grupo mudou depois da revisão? Por quê?</label>
+    <textarea class="inp" id="mud" rows="3" data-bind="review.mudancas" placeholder="ex.: Incluímos a etapa de descarte do resíduo, trocamos 'usar EPI' por 'usar luva nitrílica e óculos de ampla visão'…">${esc(S.review.mudancas)}</textarea>
+    <label class="f" for="nov">Algum risco só apareceu na revisão? Qual? <span class="muted">(opcional)</span></label>
+    <textarea class="inp" id="nov" rows="2" data-bind="review.novos">${esc(S.review.novos)}</textarea>
+  </div>
+  <div class="card"><h3>Prévia da ITr</h3><div class="table-scroll">${itrTable()}</div></div>`;
+}
+
+/* ---------- 7: enviar ---------- */
+function scrSend(){
+  const A=analyze(); const configured = /^https:\/\//.test(apiUrl());
+  return `
+  <div class="card">
+    <div class="kicker">Etapa 8 · Entrega</div>
+    <h2>Enviar a ITr ao professor</h2>
+    <p>Ao clicar em <b>Enviar</b>, a ITr completa vai direto para a planilha do professor. Guardem o código de envio.</p>
+    <div class="score">
+      <div><div class="muted">Etapas</div><div class="v">${S.steps.length}</div></div>
+      <div><div class="muted">Potenciais / procedimentos</div><div class="v">${A.nItens}</div></div>
+      <div><div class="muted">Indicador do assistente</div><div class="v">${A.indice}%</div></div>
+    </div>
+    ${S.lastSend?`<div class="receipt" style="margin:12px 0"><div>Último envio registrado</div><div class="big">${S.codigo}-${S.envios}</div><div class="muted">${esc(S.lastSend)}</div><p style="margin:8px 0 0;font-size:.9rem">Se fizerem correções, podem enviar de novo: o professor verá a versão mais recente.</p></div>`:''}
+    ${configured?'':`<div class="al err"><i>!</i><span>O envio ainda não foi configurado pelo professor neste arquivo. Usem “Salvar PDF” e “Baixar arquivo de dados” e entreguem conforme a orientação do professor.</span></div>`}
+    <div class="row" style="margin-top:14px">
+      <button class="btn acc" data-act="send" id="btnSend" ${configured?'':'disabled'}>${S.envios?'Enviar nova versão':'Enviar ITr ao professor'}</button>
+      <button class="btn" data-act="print">Salvar PDF / imprimir</button>
+      <button class="btn" data-act="download">Baixar arquivo de dados (.json)</button>
+    </div>
+    <div id="sendStatus" style="margin-top:10px"></div>
+  </div>
+  <div class="card"><h3>ITr final</h3><div class="table-scroll">${itrTable()}</div></div>`;
+}
+
+/* ---------- lateral ---------- */
+function renderSide(){
+  const e=expObj(); let h='';
+  if(S.screen===2 && e && e.c!=='OUT'){
+    h+=`<div class="sidecard"><h4>Roteiro da apostila · ${e.c}</h4><p style="font-size:.86rem"><b>Materiais:</b> ${esc(e.mat)}</p><p style="font-size:.86rem"><b>Reagentes:</b> ${esc(e.reag)}</p><ol>${e.proc.map(p=>'<li>'+esc(p)+'</li>').join('')}</ol></div>`;
+  }
+  if(S.screen===3){
+    const all=S.steps.map(s=>s.text).join(' \n ');
+    h+=`<div class="sidecard"><h4>Etapas naturais</h4><ul class="chk">${ETAPAS_NATURAIS.map(n=>{const y=n.re.test(all);return `<li class="${y?'y':'n'}"><span class="m">${y?'✓':'○'}</span><span><b>${n.k}</b><br><span class="muted">${n.dica}</span></span></li>`;}).join('')}</ul><p class="muted" style="margin-top:8px;font-size:.8rem">O assistente procura palavras-chave; a decisão é do grupo.</p></div>`;
+    h+=`<div class="sidecard"><h4>As 4 regras</h4><ol><li>Qual é o trabalho, com exatidão</li><li>Dividir em etapas sucessivas</li><li>Sem excesso de detalhes</li><li>Começar com verbo de ação</li></ol></div>`;
+  }
+  if(S.screen===4){
+    h+=`<div class="sidecard"><h4>Perguntas do manual</h4><ul style="list-style:none;padding:0">${PERG.map(p=>'<li>'+p+'</li>').join('')}</ul></div>`;
+    h+=`<div class="sidecard"><h4>Bom potencial = efeito + causa</h4><p style="font-size:.86rem;margin:0">✓ “Corte na mão por quebra da pipeta ao encaixar a pera”<br>✓ “Resultado alto por bolha de ar na ponta da bureta”<br>✗ “Acidente” &nbsp;✗ “Usar luvas” &nbsp;✗ “Cuidado”</p></div>`;
+  }
+  if(S.screen===5){
+    h+=`<div class="sidecard"><h4>Ações, não intenções</h4><p style="font-size:.86rem;margin:0">✗ “Tomar cuidado com o ácido”<br>✓ “Adicionar o ácido lentamente sobre a água, na capela, com luva e óculos de ampla visão”<br><br>✗ “Usar EPI”<br>✓ “Usar luva nitrílica e jaleco de manga longa”</p></div>`;
+  }
+  if([3,4,5].includes(S.screen) && e){
+    h+=`<div class="sidecard"><h4>${e.c==='OUT'?'Procedimento':'Roteiro da apostila · '+e.c}</h4>${e.c==='OUT'?'<p style="font-size:.86rem">'+esc(S.exp.outro)+'</p>':'<ol>'+e.proc.map(p=>'<li>'+esc(p)+'</li>').join('')+'</ol>'}</div>`;
+  }
+  if([3,4,5].includes(S.screen)){
+    const A=analyze(); const c=S.screen===3?A.p1:S.screen===4?A.p2:A.p3;
+    h = `<div class="sidecard"><h4>Assistente · esta coluna</h4><div class="meter ${c<60?'low':c<85?'mid':''}"><span style="width:${c}%"></span></div><p class="muted" style="margin:0;font-size:.82rem">${c}% das entradas sem alertas</p></div>` + h;
+  }
+  $('#side').innerHTML=h;
+}
+
+/* ================================================================
+   EVENTOS
+   ================================================================ */
+function findStep(id){ return S.steps.find(s=>s.id===id); }
+function setPath(path,val){ const p=path.split('.'); let o=S; for(let i=0;i<p.length-1;i++) o=o[p[i]]; o[p[p.length-1]]=val; }
+
+document.addEventListener('input', ev=>{
+  const t=ev.target; const d=t.dataset;
+  if(d.bind){ setPath(d.bind,t.value); }
+  else if(d.step){ const s=findStep(d.step); s.text=t.value; const el=$('#al-'+s.id); if(el) el.innerHTML = words(s.text).length?alertsHTML(vStep(s.text),'Redação adequada.'):''; }
+  else if(d.risk){ const [sid,iid]=d.risk.split('|'); const it=findStep(sid).items.find(x=>x.id===iid); it.risk=t.value; $('#al-r-'+iid).innerHTML = words(it.risk).length?alertsHTML(vRisk(it.risk)):''; }
+  else if(d.proc){ const [sid,iid]=d.proc.split('|'); const st=findStep(sid); const it=st.items.find(x=>x.id===iid); it.proc=t.value; $('#al-p-'+iid).innerHTML = words(it.proc).length?alertsHTML([...vProc(it.proc),...vCoer(st.text,it.risk,it.proc)],'Ação concreta e específica.'):''; }
+  else if(d.just){ const s=findStep(d.just); s.just=t.value; $('#al-j-'+s.id).innerHTML=alertsHTML(vJust(s.just)); }
+  else if(d.ponto){ findStep(d.ponto).ponto=t.value; }
+  else return;
+  renderChrome(); if([3,4,5].includes(S.screen)) renderSide(); save();
+});
+document.addEventListener('change', ev=>{
+  const t=ev.target; const d=t.dataset;
+  if(d.norisk){ const s=findStep(d.norisk); s.noRisk=t.checked; if(!s.noRisk && !s.items.length) s.items.push({id:nid('i'),risk:'',proc:''}); keepScroll(); }
+  else if(d.check!==undefined){ S.review.checks[+d.check]=t.checked; renderChrome(); save(); }
+});
+document.addEventListener('toggle', ev=>{
+  const d=ev.target; if(d.matches && d.matches('details.lesson') && d.open){ S.seen[d.dataset.lesson]=true; save(); }
+}, true);
+function keepScroll(focusSel){ const y=window.scrollY; renderChrome(); $('#main').innerHTML=[scrIdent,scrLearn,scrProc,scrCol1,scrCol2,scrCol3,scrReview,scrSend][S.screen](); renderSide(); window.scrollTo({top:y}); save(); if(focusSel){ const el=$(focusSel); if(el){ el.focus(); } } }
+
+document.addEventListener('click', ev=>{
+  const b=ev.target.closest('[data-act]'); if(!b || b.disabled) return;
+  const a=b.dataset.act, id=b.dataset.id;
+  const idx = id? S.steps.findIndex(s=>s.id===id) : -1;
+  switch(a){
+    case 'go': S.screen=+b.dataset.to; render(); break;
+    case 'addMember': S.ident.integrantes.push({nome:'',num:''}); keepScroll(); break;
+    case 'delMember': S.ident.integrantes.pop(); keepScroll(); break;
+    case 'reset': if(confirm('Apagar todo o rascunho deste navegador e recomeçar?')){ try{localStorage.removeItem(LS_KEY);}catch(e){} S=newState(); render(); } break;
+    case 'quiz': { const q=+b.dataset.q, o=+b.dataset.o; if(S.quiz.first[q]===undefined) S.quiz.first[q]=(o===QUIZ[q].a); S.quiz.ans[q]=o; keepScroll(); break; }
+    case 'pickExp': { S.exp.code=b.dataset.c; keepScroll(); break; }
+    case 'addStep': { const s={id:nid('s'),text:'',items:[],noRisk:false,just:'',ponto:''}; S.steps.push(s); keepScroll('[data-step="'+s.id+'"]'); break; }
+    case 'ins': { const s={id:nid('s'),text:'',items:[],noRisk:false,just:'',ponto:''}; S.steps.splice(idx+1,0,s); keepScroll('[data-step="'+s.id+'"]'); break; }
+    case 'delStep': { const s=S.steps[idx]; const has=s.items.some(it=>it.risk||it.proc); if(!words(s.text).length || !has || confirm('Esta etapa já tem potenciais/procedimentos. Excluir mesmo assim?')){ S.steps.splice(idx,1); keepScroll(); } break; }
+    case 'up': if(idx>0){ [S.steps[idx-1],S.steps[idx]]=[S.steps[idx],S.steps[idx-1]]; keepScroll(); } break;
+    case 'down': if(idx<S.steps.length-1){ [S.steps[idx+1],S.steps[idx]]=[S.steps[idx],S.steps[idx+1]]; keepScroll(); } break;
+    case 'addRisk': { const it={id:nid('i'),risk:'',proc:''}; S.steps[idx].items.push(it); keepScroll('[data-risk="'+id+'|'+it.id+'"]'); if(b.classList.contains('chip')){ const el=$('[data-risk="'+id+'|'+it.id+'"]'); if(el) el.placeholder='Pensando em: '+b.textContent+' → descrevam com as palavras do grupo'; } break; }
+    case 'delRisk': { const s=S.steps[idx]; s.items=s.items.filter(x=>x.id!==b.dataset.item); keepScroll(); break; }
+    case 'print': doPrint(); break;
+    case 'download': doDownload(); break;
+    case 'send': doSend(); break;
+  }
+});
+$('#btnPrev').addEventListener('click',()=>{ if(S.screen>0){ S.screen--; render(); } });
+$('#btnNext').addEventListener('click',()=>{ if(!gate(S.screen) && S.screen<SCREENS.length-1){ S.screen++; render(); } });
+
+/* ================================================================
+   SAÍDAS: impressão, JSON, envio
+   ================================================================ */
+function doPrint(){ $('#printArea').innerHTML=itrTable(); window.print(); }
+function itrTexto(){
+  return S.steps.map((s,i)=>{
+    let t=(i+1)+'. '+s.text;
+    if(s.noRisk) t+='\n   [sem potencial] '+s.just+(s.ponto?'\n   Ponto principal: '+s.ponto:'');
+    else s.items.forEach((it,k)=>{ const n=itemNum(i,s,k); t+='\n   P'+n+': '+it.risk+'\n   R'+n+': '+it.proc; });
+    return t;
+  }).join('\n');
+}
+function payload(){
+  const A=analyze();
+  const first=Object.values(S.quiz.first).filter(Boolean).length;
+  const itens=[];
+  S.steps.forEach((s,i)=>{
+    if(s.noRisk||!s.items.length) itens.push({etapa:i+1,item:String(i+1),etapa_txt:s.text,potencial:'———',procedimento:s.ponto||'———',sem_risco:true,justificativa:s.just,alertas:[...vStep(s.text),...vJust(s.just)].filter(x=>x.l!=='info').map(x=>x.m).join(' | ')});
+    else s.items.forEach((it,k)=>itens.push({etapa:i+1,item:itemNum(i,s,k),etapa_txt:s.text,potencial:it.risk,procedimento:it.proc,sem_risco:false,justificativa:'',alertas:[...(k===0?vStep(s.text):[]),...vRisk(it.risk),...vProc(it.proc)].filter(x=>x.l!=='info').map(x=>x.m).join(' | ')}));
+  });
+  return {
+    versao:VERSAO, codigo:S.codigo, envio:S.envios+1, enviado_em:new Date().toISOString(),
+    turma:S.ident.turma, grupo:S.ident.grupo,
+    integrantes:S.ident.integrantes.filter(p=>p.nome.trim()).map(p=>p.nome.trim()+(p.num?' ('+p.num+')':'')).join('; '),
+    experimento:expLabel(), exp_code:S.exp.code,
+    titulo:S.header.titulo, numero:S.header.numero, rev:S.header.rev, data:S.header.data,
+    n_etapas:S.steps.length, n_potenciais:A.nItens, etapas_sem_risco:A.semRisco,
+    alertas_c1:A.c1.warn+A.c1.err, alertas_c2:A.c2.warn+A.c2.err, alertas_c3:A.c3.warn+A.c3.err,
+    ind_c1:A.p1, ind_c2:A.p2, ind_c3:A.p3, indicador:A.indice,
+    quiz_primeira:first+'/'+QUIZ.length, aulas_abertas:Object.keys(S.seen).length+'/8',
+    tempo_min:Math.round((Date.now()-S.startedAt)/60000),
+    revisao_mudancas:S.review.mudancas, revisao_novos:S.review.novos,
+    itr_texto:itrTexto(), itens
+  };
+}
+function doDownload(){
+  const blob=new Blob([JSON.stringify(payload(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=S.codigo+'_grupo'+(S.ident.grupo||'')+'.json'; document.body.appendChild(a); a.click(); a.remove();
+}
+async function doSend(){
+  const url=apiUrl(); const st=$('#sendStatus'); const btn=$('#btnSend');
+  const p=payload(); const body=JSON.stringify(p);
+  btn.disabled=true; st.innerHTML='<div class="al info"><i>…</i><span>Enviando…</span></div>';
+  const ok=(conf)=>{ S.envios=p.envio; S.lastSend=new Date().toLocaleString('pt-BR')+(conf?' · confirmado pela planilha':' · enviado (sem confirmação de leitura)'); save(); keepScroll(); toast('ITr enviada!'); };
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    const j=await r.json();
+    if(j.ok) ok(true); else throw new Error(j.erro||'erro desconhecido');
+  }catch(e1){
+    if(e1 instanceof TypeError){ // provável bloqueio de CORS: tenta modo opaco (a planilha ignora duplicatas)
+      try{ await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body}); ok(false); return; }
+      catch(e2){ st.innerHTML=alertsHTML([{l:'err',m:'Sem conexão com a planilha. Verifiquem a internet e tentem de novo. Se persistir, usem “Salvar PDF” e “Baixar arquivo de dados”.'}]); btn.disabled=false; return; }
+    }
+    const msg = (e1 instanceof SyntaxError) ? 'A planilha não respondeu como esperado. Avisem o professor (o Apps Script precisa estar implantado com acesso “Qualquer pessoa”). Enquanto isso, usem “Baixar arquivo de dados”.' : 'A planilha recusou o envio: '+e1.message;
+    st.innerHTML=alertsHTML([{l:'err',m:msg}]); btn.disabled=false;
+  }
+}
+
+render();
+</script>
+</body>
+</html>
