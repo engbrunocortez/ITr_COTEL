@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Construtor de ITr · COTEL</title>
+<title>Segurança do Trabalho + Química Geral Experimental · PAT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -193,6 +193,19 @@ textarea.inp{resize:vertical;min-height:44px}
 .exp.sel{border:2px solid var(--navy);background:var(--navy-soft)}
 
 /* tabela ITr */
+.itr-head{width:100%;border-collapse:collapse;background:#fff;font-size:.85rem}
+.itr-head td{border:1.5px solid #333;padding:8px 10px;vertical-align:middle}
+.itr-head .logo{width:18%;text-align:center}
+.itr-head .logo img{max-width:100%;max-height:90px;object-fit:contain}
+.logo-fb{display:flex;flex-direction:column;align-items:center;gap:2px}
+.logo-fb b{font-size:1.5rem;letter-spacing:.08em;color:var(--navy)}
+.logo-fb span{font-size:.7rem;color:#444}
+.itr-head .ttl{text-align:center}
+.itr-head .t1{font-weight:700;font-size:1.2rem;letter-spacing:.08em}
+.itr-head .t2{margin-top:6px;font-size:.95rem;text-transform:uppercase}
+.itr-head .meta{width:27%;font-size:.8rem;line-height:1.45;vertical-align:top}
+.itr-head .meta .sep{border-top:1px solid #999;margin-top:5px;padding-top:4px}
+.itr-head + .itr th{border-top:0}
 .itr{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff}
 .itr th,.itr td{border:1.5px solid #333;padding:7px 9px;vertical-align:top}
 .itr .hd td{background:#fff;font-variant:normal}
@@ -215,6 +228,13 @@ textarea.inp{resize:vertical;min-height:44px}
 .receipt{border:2px dashed var(--ok);border-radius:12px;padding:18px;background:var(--ok-soft);text-align:center}
 .receipt .big{font-family:'IBM Plex Mono',monospace;font-size:1.6rem;font-weight:600;color:var(--ok)}
 
+.think{margin-top:8px;border:1px solid #e7c9a9;background:#fff8f1;border-radius:8px;padding:10px 12px}
+.think-h{font-family:'IBM Plex Mono',monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:600;margin-bottom:4px}
+.think p{margin:0 0 8px;font-size:.93rem}
+#modal{position:fixed;inset:0;background:rgba(20,28,45,.55);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+#modal.on{display:flex}
+.mbox{background:#fff;border-radius:14px;max-width:620px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow:auto}
+.mbox h3{font-size:1.15rem;line-height:1.4}
 .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:.9rem;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 
@@ -236,8 +256,8 @@ textarea.inp{resize:vertical;min-height:44px}
     <div class="brand">
       <span class="brand-badge">ITr</span>
       <div style="min-width:0">
-        <div class="brand-t">Construtor de Instrução de Trabalho</div>
-        <div class="brand-s">COTEL · Química Geral Experimental · Programa Análise do Trabalho</div>
+        <div class="brand-t">Segurança do Trabalho + Química Geral Experimental</div>
+        <div class="brand-s">Programa de Análise do Trabalho (PAT) · Instrução de Trabalho (ITr) · COTEL</div>
       </div>
     </div>
     <div class="code" id="topCode"></div>
@@ -260,6 +280,7 @@ textarea.inp{resize:vertical;min-height:44px}
 </footer>
 
 <div class="toast" id="toast"></div>
+<div id="modal"></div>
 <div id="printArea"></div>
 
 <script>
@@ -268,7 +289,11 @@ textarea.inp{resize:vertical;min-height:44px}
    (Implantar > Nova implantação > App da Web > copiar URL /exec)
    ================================================================ */
 const API_URL = 'https://script.google.com/macros/s/AKfycbwNSlm0HhI-wLvFApRYiIl_pa6s0z0hI7KVDRWq4jr-nuvpclsaaqhlqEfQzwPP0LeMsg/exec';
-const VERSAO = 'ITr-COTEL 1.0';
+const VERSAO = 'ITr-COTEL 1.1';
+/* Logo do COTEL no cabeçalho da ITr: coloque a imagem (ex.: cotel.png) na mesma pasta do index.html no GitHub.
+   Se a imagem não for encontrada, aparece o nome COTEL em texto. */
+const LOGO_URL = 'cotel.png';
+const REVISOR = 'Prof. Bruno Cortez';
 
 /* ---------------- dados: experimentos da apostila ---------------- */
 const EXPS = [
@@ -412,19 +437,58 @@ const HINTS3 = [
  {re:/(implos|vácuo|vacuo|pressão|pressao)/i, h:['Como verificar a vidraria antes de aplicar vácuo/pressão?','Como aliviar a pressão com segurança?']}
 ];
 
-const ETAPAS_NATURAIS = [
- {k:'EPI no início', re:/(epi|jaleco|avental|óculos|oculos|luva)/i, dica:'Vestir/separar os EPI antes de começar.'},
- {k:'Separar e inspecionar materiais', re:/(separar|selecionar|verificar|conferir|inspecionar|providenciar)/i, dica:'Separar vidrarias e reagentes e verificar se estão em condições.'},
- {k:'Consultar rótulo/FISPQ ou roteiro', re:/(fispq|rótulo|rotulo|roteiro|ler |consultar|calcular|cálculo)/i, dica:'Ler o roteiro, os rótulos ou a FISPQ / fazer os cálculos antes.'},
- {k:'Registrar resultados', re:/(anotar|registrar|ler |leitura|observar)/i, dica:'Anotar as leituras/observações.'},
- {k:'Descartar resíduos', re:/(descart|resíduo|residuo)/i, dica:'Descartar resíduos no recipiente correto.'},
- {k:'Lavar, guardar e organizar', re:/(lavar|limpar|guardar|organizar|desligar|desmontar)/i, dica:'Lavar a vidraria, desligar equipamentos e deixar a bancada limpa.'}
+/* ---------------- reflexão: o que costuma faltar na 1ª coluna (perguntas, nunca respostas) ---------------- */
+const CATS = [
+ {k:'epi', nome:'Preparação pessoal', pos:'inicio', re:/(epi|jaleco|avental|óculos|oculos|luva|vestir|equipar)/i,
+  q:'Imaginem o grupo entrando no laboratório agora. O que acontece antes de qualquer pessoa tocar em um frasco ou em uma vidraria? Isso está na sequência de vocês?'},
+ {k:'inspecao', nome:'Preparação do material', pos:'inicio', re:/(separar|selecionar|verificar|conferir|inspecionar|providenciar|checar)/i,
+  q:'E se, no meio do experimento, uma vidraria estiver trincada, suja ou simplesmente não estiver na bancada? Em que momento da sequência o grupo perceberia isso?'},
+ {k:'info', nome:'Informação prévia', pos:'inicio', re:/(fds|fispq|ficha|rótulo|rotulo|roteiro|\bler\b|consultar|calcular|cálculo|calculo)/i,
+  q:'Como o grupo fica sabendo, antes de começar, dos perigos de cada reagente e das quantidades que vai usar?'},
+ {k:'registro', nome:'Registro', pos:'fim', re:/(anotar|registrar|\bler\b|leitura|observar|medir o ph)/i,
+  q:'O experimento gera dados ou observações. Em que ponto da sequência eles ficam guardados para depois?'},
+ {k:'descarte', nome:'Destino dos resíduos', pos:'fim', re:/(descart|resíduo|residuo|rejeito)/i,
+  q:'A ITr termina quando o resultado aparece? O que acontece com o que sobrou nos béqueres, tubos e funis?'},
+ {k:'encerramento', nome:'Encerramento', pos:'fim', re:/(lavar|limpar|guardar|organizar|desligar|desmontar|apagar)/i,
+  q:'Como o próximo grupo vai encontrar a bancada, a vidraria e os equipamentos depois que vocês saírem?'}
 ];
+/* perguntas que aparecem depois de cada etapa escrita — sobre a SEQUÊNCIA, sem dar a resposta */
+const STEPQ = [
+ {re:/(acender|bunsen|chama|aquec)/i, q:'Antes de acender a chama, o que precisa estar longe dela? E em que momento da sequência ela será apagada?'},
+ {re:/(pesar|balança|balanca|tarar)/i, q:'A balança estava pronta para receber o material? Em que etapa isso foi garantido?'},
+ {re:/(bureta|titul)/i, q:'A bureta usada aqui foi preparada em alguma etapa anterior? Como?'},
+ {re:/(pipet)/i, q:'Com o que o líquido será aspirado? Esse material aparece antes desta etapa?'},
+ {re:/(ácid|acid|h2so4|h₂so₄|hcl|naoh|hidróx|concentrad)/i, q:'De onde vem esse reagente e onde ele é manipulado? O frasco precisou ser buscado, aberto e fechado?'},
+ {re:/(etanol|álcool|alcool|gasolina|butanol|solvente)/i, q:'Neste momento da sequência existe alguma fonte de calor ou chama ligada por perto?'},
+ {re:/(filtr|büchner|buchner|kitassato|vácuo|vacuo)/i, q:'O sistema de filtração foi montado e conferido antes desta etapa?'},
+ {re:/(agitar|rolha|tampar)/i, q:'Depois de agitar, o que é feito antes de abrir ou de deixar em repouso?'},
+ {re:/(repetir|triplicata|novamente|demais)/i, q:'Repetir envolve preparar de novo a vidraria (lavar, secar, zerar)? Isso fica claro para quem lê?'},
+ {re:/(anotar|\bler\b|registrar|observar)/i, q:'Depois desta leitura, o que acontece com a amostra e com a vidraria?'},
+ {re:/(descart|resíduo|residuo)/i, q:'Para onde vai esse resíduo? Todos os resíduos deste experimento vão para o mesmo lugar?'},
+ {re:/(transfer|adicion|despej|verter|colocar)/i, q:'O recipiente que recebe o material estava pronto (limpo, identificado, no lugar certo)?'},
+ {re:/(montar|suporte|garra)/i, q:'Depois de montado, o conjunto é conferido antes de ser usado?'},
+ {re:/(lavar|limpar)/i, q:'Isso é uma etapa por si só ou o “como lavar” é um detalhe que pertence à 3ª coluna?'}
+];
+const STEPQ_GERAL = [
+ 'O que precisa estar pronto para esta etapa acontecer? Isso já aparece antes dela?',
+ 'Entre a etapa anterior e esta, existe algum movimento que o grupo faz “sem perceber”?',
+ 'Se um colega que nunca fez este experimento lesse só esta linha, ele saberia exatamente o que fazer?',
+ 'Esta etapa é uma ação só ou esconde duas ou três ações diferentes?'
+];
+function stepQuestion(i, text){
+  if(i===0) return 'Esta é mesmo a primeira coisa que o grupo faz ao chegar ao laboratório?';
+  const m=STEPQ.find(x=>x.re.test(text)); return m ? m.q : STEPQ_GERAL[i % STEPQ_GERAL.length];
+}
+function pendingCats(){
+  const all=S.steps.map(s=>s.text).join(' \n ');
+  return CATS.filter(c=>!c.re.test(all) && !(S.reflex[c.k] && S.reflex[c.k].resp==='justificado'));
+}
 
 /* ================================================================
    ESTADO
    ================================================================ */
 const LS_KEY = 'itr_cotel_v1';
+const TURMA = '1º ano - Curso Técnico em Química';
 const SCREENS = ['Identificação','Aprender','Procedimento','1ª coluna','2ª coluna','3ª coluna','Revisão crítica','Enviar'];
 let uid = 1;
 const nid = p => p + Date.now().toString(36) + (uid++).toString(36);
@@ -432,15 +496,16 @@ function genCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(le
 function today(){ const d=new Date(); return d.toLocaleDateString('pt-BR'); }
 function newState(){
   return {codigo:genCode(), screen:0,
-    ident:{turma:'',grupo:'',integrantes:[{nome:'',num:''},{nome:'',num:''},{nome:'',num:''}]},
+    ident:{turma:TURMA,grupo:'',integrantes:[{nome:''},{nome:''},{nome:''}]},
     exp:{code:'',outro:''},
     header:{titulo:'',numero:'',rev:'00',data:today()},
-    steps:[], quiz:{ans:{}, first:{}}, seen:{},
+    steps:[], quiz:{ans:{}, first:{}}, seen:{}, reflex:{}, stepQ:{},
     review:{checks:[false,false,false,false], mudancas:'', novos:''},
     startedAt:Date.now(), envios:0, lastSend:null};
 }
 let S;
 try{ S = JSON.parse(localStorage.getItem(LS_KEY)) || newState(); }catch(e){ S = newState(); }
+S.ident.turma = TURMA; S.reflex = S.reflex || {}; S.stepQ = S.stepQ || {};
 let saveT=null;
 function save(){
   clearTimeout(saveT);
@@ -582,6 +647,8 @@ function gate(i){ // retorna mensagem de bloqueio para SAIR da tela i (ou '' se 
       const filled=S.steps.filter(s=>words(s.text).length);
       if(filled.length<6) return 'A 1ª coluna precisa de pelo menos 6 etapas ('+filled.length+' até agora).';
       if(filled.length!==S.steps.length) return 'Há etapas vazias: preencha ou remova.';
+      const abertas=S.steps.filter(x=>S.stepQ[x.id] && !S.stepQ[x.id].resp).length;
+      if(abertas) return 'Respondam às perguntas “Pare e pense” ('+abertas+' pendente'+(abertas>1?'s':'')+').';
       return '';
     }
     case 4: {
@@ -640,7 +707,7 @@ function scrIdent(){
   <div class="card">
     <div class="kicker">Atividade auto-instrucional</div>
     <h2>Elaboração de uma Instrução de Trabalho (ITr)</h2>
-    <p class="lead">Nesta aula o grupo vai elaborar uma ITr técnica para um procedimento do Laboratório de Química Geral Experimental, seguindo a metodologia do <b>Programa Análise do Trabalho (PAT)</b>.</p>
+    <p class="lead">Nesta aula o grupo vai elaborar uma ITr técnica para um procedimento do Laboratório de Química Geral Experimental, seguindo a metodologia do <b>Programa de Análise do Trabalho (PAT)</b>.</p>
     <div class="callout">
       <p><b>Como funciona:</b> 1) estude os conceitos e responda à verificação; 2) escolha o procedimento; 3) construa a ITr coluna por coluna, com a ajuda do assistente; 4) faça a revisão crítica; 5) envie. O envio vai direto para o professor — não é preciso mandar PDF por e-mail.</p>
       <p>O trabalho fica salvo automaticamente <b>neste navegador</b>. Use sempre o mesmo computador e o mesmo navegador do grupo.</p>
@@ -649,14 +716,13 @@ function scrIdent(){
   <div class="card">
     <h3>Identificação do grupo</h3>
     <div class="grid2">
-      <div><label class="f" for="turma">Turma</label><input class="inp" id="turma" data-bind="ident.turma" value="${esc(I.turma)}" placeholder="ex.: 1º Química A"></div>
+      <div><label class="f" for="turma">Turma</label><input class="inp" id="turma" value="${esc(TURMA)}" readonly style="background:#f1efe8"></div>
       <div><label class="f" for="grupo">Grupo</label><input class="inp" id="grupo" data-bind="ident.grupo" value="${esc(I.grupo)}" placeholder="ex.: 3"></div>
     </div>
     <label class="f">Integrantes <span class="muted">(a ITr é uma atividade de equipe)</span></label>
     ${I.integrantes.map((p,k)=>`
-      <div class="grid2" style="grid-template-columns:3fr 1fr;margin-bottom:8px">
-        <input class="inp" data-bind="ident.integrantes.${k}.nome" value="${esc(p.nome)}" placeholder="Nome completo" aria-label="Nome do integrante ${k+1}">
-        <input class="inp" data-bind="ident.integrantes.${k}.num" value="${esc(p.num)}" placeholder="Nº" aria-label="Número do integrante ${k+1}">
+      <div style="margin-bottom:8px">
+        <input class="inp" data-bind="ident.integrantes.${k}.nome" value="${esc(p.nome)}" placeholder="Nome completo do integrante ${k+1}" aria-label="Nome completo do integrante ${k+1}">
       </div>`).join('')}
     <div class="row">
       <button class="btn sm" data-act="addMember">+ integrante</button>
@@ -705,7 +771,7 @@ function scrLearn(){
       <li>Descrever, <b>sem excesso de detalhes</b>, o que deve ser feito em cada etapa.</li>
       <li>Iniciar cada etapa com um <b>verbo que denote ação</b> (Solicitar, Verificar, Colocar, Pesar, Transferir…).</li>
     </ol>
-    <div class="callout"><p>Sem excessos e sem omissões: a divisão deve ser objetiva e balanceada, mas conter <b>todas as etapas naturais</b> da operação — inclusive as que a apostila não escreve, como vestir os EPI, separar e inspecionar o material, descartar resíduos e limpar a bancada.</p></div>
+    <div class="callout"><p>Sem excessos e sem omissões: a divisão deve ser objetiva e balanceada, mas conter <b>todas as etapas naturais</b> da operação — inclusive as que a apostila não escreve. Pensem no que acontece <b>antes</b> e <b>depois</b> do experimento propriamente dito.</p></div>
     <div class="callout orange"><p><b>ITr ≠ relatório.</b> No relatório vocês escrevem no passado e na voz passiva (“Pipetou-se 25 mL…”). Na ITr, escreve-se o que <b>fazer</b>, no infinitivo (“Pipetar 25,0 mL…”).</p></div>`)}
   ${lesson(5,'2ª coluna: na detecção dos riscos, os detalhes são importantes',`
     <p>É talvez o momento mais importante da discussão: estabelecer, com exatidão, <b>todos</b> os potenciais de perdas e acidentes de cada etapa. Aqui a discussão é feita <b>sem a preocupação com as medidas preventivas</b> — isso fica para depois.</p>
@@ -727,7 +793,7 @@ function scrLearn(){
   ${lesson(8,'Exemplo real (e um olhar crítico)',`
     <p>Trecho de uma ITr do manual: <b>preparação, por alunos, de 200 mL de solução 0,1 M de ácido sulfúrico</b> (DEQUI, Rev. 00, fev/2003). Repare na numeração 4.1/4.2 e nas linhas “———”.</p>
     <div class="table-scroll"><table class="itr"><thead><tr><th>Sequência das etapas de trabalho</th><th>Potencial de perdas e acidentes</th><th>Procedimento recomendado e/ou pontos principais</th></tr></thead><tbody>${ex}</tbody></table></div>
-    <div class="callout orange" style="margin-top:12px"><p><b>Sempre é possível aperfeiçoar uma ITr.</b> Observem: a etapa 6 ficou sem potencial — mas não haveria risco de encher demais o béquer? E “luva de látex” é a luva certa para ácido sulfúrico concentrado? Consultem a FISPQ. Este é o espírito da revisão crítica. Por isso este procedimento <b>não</b> está entre as opções da atividade.</p></div>`)}
+    <div class="callout orange" style="margin-top:12px"><p><b>Sempre é possível aperfeiçoar uma ITr.</b> Observem: a etapa 6 ficou sem potencial — mas não haveria risco de encher demais o béquer? E “luva de látex” é a luva certa para ácido sulfúrico concentrado? Consultem a FDS (Ficha com Dados de Segurança). Este é o espírito da revisão crítica. Por isso este procedimento <b>não</b> está entre as opções da atividade.</p></div>`)}
   <div class="card" id="quiz">
     <div class="kicker">Verificação</div>
     <h3>Responda às ${QUIZ.length} questões</h3>
@@ -771,7 +837,7 @@ function scrCol1(){
     <div class="kicker">Etapa 4 · 1ª coluna</div>
     <h2>Sequência das etapas de trabalho</h2>
     <p>Escrevam as etapas <b>na ordem exata em que acontecem na prática</b> — do momento em que o grupo chega à bancada até deixá-la limpa. O assistente avisa quando uma frase foge das regras.</p>
-    <div class="callout"><p><b>A apostila descreve o experimento; a ITr descreve o trabalho inteiro.</b> Olhem a lista “Etapas naturais” ao lado: ela mostra o que costuma faltar.</p></div>
+    <div class="callout"><p><b>A apostila descreve o experimento; a ITr descreve o trabalho inteiro.</b> Ao terminar cada etapa, o assistente vai fazer uma pergunta para o grupo refletir. Discutam antes de responder.</p></div>
   </div>
   <div class="card" id="col1">
     ${S.steps.map((s,i)=>`
@@ -780,6 +846,7 @@ function scrCol1(){
         <div>
           <textarea class="inp" rows="2" data-step="${s.id}" placeholder="${i===0?'ex.: Vestir jaleco de manga longa e óculos de segurança':'Verbo no infinitivo + o que fazer'}" aria-label="Etapa ${i+1}">${esc(s.text)}</textarea>
           <div class="alerts" id="al-${s.id}">${words(s.text).length?alertsHTML(vStep(s.text),'Redação adequada.'):''}</div>
+          <div id="rq-${s.id}">${rqHTML(s)}</div>
         </div>
         <div class="tools">
           <button class="btn" data-act="up" data-id="${s.id}" title="Mover para cima" aria-label="Mover etapa ${i+1} para cima" ${i===0?'disabled':''}>↑</button>
@@ -791,6 +858,38 @@ function scrCol1(){
     <div class="row" style="margin-top:12px"><button class="btn pri" data-act="addStep">+ Adicionar etapa</button><span class="muted">${S.steps.length} etapa(s) · mínimo 6</span></div>
   </div>`;
 }
+
+function rqHTML(s){
+  const q=S.stepQ[s.id]; if(!q || q.resp) return '';
+  return `<div class="think"><div class="think-h">Pare e pense</div><p>${esc(q.q)}</p>
+    <div class="row"><button class="btn sm" data-act="rq" data-id="${s.id}" data-r="ok">Já está contemplado</button>
+    <button class="btn sm" data-act="rq" data-id="${s.id}" data-r="antes">Incluir etapa antes desta</button>
+    <button class="btn sm" data-act="rq" data-id="${s.id}" data-r="depois">Incluir etapa depois desta</button></div></div>`;
+}
+/* ---------- janela de reflexão ao concluir a 1ª coluna ---------- */
+function openReflex(){
+  const pend=pendingCats(); if(!pend.length){ closeReflex(); S.screen=4; render(); return; }
+  const c=pend[0]; const prev=S.reflex[c.k];
+  const tot=CATS.filter(x=>!(S.reflex[x.k]&&S.reflex[x.k].resp==='justificado')).length;
+  $('#modal').innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mq">
+    <div class="kicker">Antes de concluir a 1ª coluna · ${pend.length} pergunta${pend.length>1?'s':''} para o grupo</div>
+    <h3 id="mq">${esc(c.q)}</h3>
+    ${prev&&prev.resp==='incluir'?'<div class="al info" style="margin-bottom:10px"><i>i</i><span>O grupo já decidiu incluir algo aqui, mas o assistente ainda não reconheceu na sequência. Se já está escrito com outras palavras, expliquem abaixo.</span></div>':''}
+    <p class="muted">Discutam em grupo. Não há resposta pronta: vocês decidem se a sequência precisa mudar.</p>
+    <div class="row" style="margin:12px 0">
+      <button class="btn pri" data-act="rxInc" data-k="${c.k}">Vamos acrescentar à sequência</button>
+      <button class="btn" data-act="rxJus" data-k="${c.k}">Já está contemplado / não se aplica</button>
+    </div>
+    <div id="rxJust" style="display:none">
+      <label class="f" for="rxTxt">Expliquem em uma ou duas frases</label>
+      <textarea class="inp" id="rxTxt" rows="3" placeholder="ex.: Está na etapa 2, quando…  /  Neste procedimento não ocorre porque…"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn pri" data-act="rxOk" data-k="${c.k}">Confirmar</button><span class="muted" id="rxMsg"></span></div>
+    </div>
+    <div style="text-align:right;margin-top:6px"><button class="btn sm ghost" data-act="rxClose">Voltar a escrever</button></div>
+  </div>`;
+  $('#modal').classList.add('on');
+}
+function closeReflex(){ $('#modal').classList.remove('on'); $('#modal').innerHTML=''; }
 
 /* ---------- 4: coluna 2 ---------- */
 function hintsFor(text, lib){ const out=[]; lib.forEach(h=>{ if(h.re.test(text)) h.h.forEach(x=>{ if(!out.includes(x)) out.push(x); }); }); return out; }
@@ -856,11 +955,25 @@ function itrTable(){
     if(s.noRisk || !s.items.length) return `<tr><td>${st}</td><td style="text-align:center">———</td><td>${s.ponto?`<span class="n">${i+1}.</span>${esc(s.ponto)}`:'<div style="text-align:center">———</div>'}</td></tr>`;
     return s.items.map((it,k)=>`<tr>${k===0?`<td rowspan="${s.items.length}">${st}</td>`:''}<td><span class="n">${itemNum(i,s,k)}</span>${esc(it.risk)}</td><td><span class="n">${itemNum(i,s,k)}</span>${esc(it.proc)}</td></tr>`).join('');
   }).join('');
-  return `<table class="itr"><thead>
-    <tr class="hd"><td colspan="2" class="ttl"><b>INSTRUÇÕES DE TRABALHO</b><br>${esc(H.titulo).toUpperCase()}</td><td class="meta"><b>COTEL</b><br>ITr nº ${esc(H.numero||'—')}<br>Rev. ${esc(H.rev)} · ${esc(H.data)}</td></tr>
+  const nomes = S.ident.integrantes.filter(p=>p.nome.trim()).map(p=>esc(p.nome.trim())).join('<br>');
+  return `<table class="itr-head"><tr>
+      <td class="logo">${logoHTML()}</td>
+      <td class="ttl"><div class="t1">INSTRUÇÃO DE TRABALHO</div><div class="t2">${esc(H.titulo)}</div></td>
+      <td class="meta">
+        <div><b>ITr Nº:</b> ${esc(H.numero)||'______'}</div>
+        <div><b>Rev.:</b> ${esc(H.rev||'00')}</div>
+        <div><b>Data:</b> ${esc(H.data)}</div>
+        <div class="sep"><b>Elaborado por:</b><br>${nomes||'—'}</div>
+        <div class="sep"><b>Revisado por:</b><br>${esc(REVISOR)}</div>
+      </td></tr></table>
+    <table class="itr"><thead>
     <tr><th style="width:33%">Sequência das etapas de trabalho</th><th style="width:30%">Potencial de perdas e acidentes</th><th>Procedimento recomendado e/ou pontos principais</th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <p style="font-size:.8rem;margin-top:8px"><b>Elaborada por:</b> ${esc(S.ident.integrantes.filter(p=>p.nome.trim()).map(p=>p.nome+(p.num?' (nº '+p.num+')':'')).join('; '))} — Turma ${esc(S.ident.turma)}, Grupo ${esc(S.ident.grupo)} · Código ${S.codigo}</p>`;
+    <p style="font-size:.75rem;margin-top:6px;color:#555">${esc(S.ident.turma)} · Grupo ${esc(S.ident.grupo)} · Código ${S.codigo}</p>`;
+}
+function logoHTML(){
+  const fb = '<div class=\'logo-fb\'><b>COTEL</b><span>Colégio Técnico de Lorena</span></div>';
+  return LOGO_URL ? `<img src="${esc(LOGO_URL)}" alt="COTEL" onerror="this.outerHTML=&quot;${fb}&quot;">` : fb;
 }
 
 /* ---------- 6: revisão ---------- */
@@ -933,8 +1046,7 @@ function renderSide(){
     h+=`<div class="sidecard"><h4>Roteiro da apostila · ${e.c}</h4><p style="font-size:.86rem"><b>Materiais:</b> ${esc(e.mat)}</p><p style="font-size:.86rem"><b>Reagentes:</b> ${esc(e.reag)}</p><ol>${e.proc.map(p=>'<li>'+esc(p)+'</li>').join('')}</ol></div>`;
   }
   if(S.screen===3){
-    const all=S.steps.map(s=>s.text).join(' \n ');
-    h+=`<div class="sidecard"><h4>Etapas naturais</h4><ul class="chk">${ETAPAS_NATURAIS.map(n=>{const y=n.re.test(all);return `<li class="${y?'y':'n'}"><span class="m">${y?'✓':'○'}</span><span><b>${n.k}</b><br><span class="muted">${n.dica}</span></span></li>`;}).join('')}</ul><p class="muted" style="margin-top:8px;font-size:.8rem">O assistente procura palavras-chave; a decisão é do grupo.</p></div>`;
+    h+=`<div class="sidecard"><h4>Visualizem a cena</h4><p style="font-size:.88rem;margin:0">Imaginem o grupo do momento em que entra no laboratório até o momento em que sai. Cada movimento que alguém faz com as mãos é uma etapa? Está na ordem em que acontece?</p></div>`;
     h+=`<div class="sidecard"><h4>As 4 regras</h4><ol><li>Qual é o trabalho, com exatidão</li><li>Dividir em etapas sucessivas</li><li>Sem excesso de detalhes</li><li>Começar com verbo de ação</li></ol></div>`;
   }
   if(S.screen===4){
@@ -987,7 +1099,7 @@ document.addEventListener('click', ev=>{
   const idx = id? S.steps.findIndex(s=>s.id===id) : -1;
   switch(a){
     case 'go': S.screen=+b.dataset.to; render(); break;
-    case 'addMember': S.ident.integrantes.push({nome:'',num:''}); keepScroll(); break;
+    case 'addMember': S.ident.integrantes.push({nome:''}); keepScroll(); break;
     case 'delMember': S.ident.integrantes.pop(); keepScroll(); break;
     case 'reset': if(confirm('Apagar todo o rascunho deste navegador e recomeçar?')){ try{localStorage.removeItem(LS_KEY);}catch(e){} S=newState(); render(); } break;
     case 'quiz': { const q=+b.dataset.q, o=+b.dataset.o; if(S.quiz.first[q]===undefined) S.quiz.first[q]=(o===QUIZ[q].a); S.quiz.ans[q]=o; keepScroll(); break; }
@@ -999,13 +1111,30 @@ document.addEventListener('click', ev=>{
     case 'down': if(idx<S.steps.length-1){ [S.steps[idx+1],S.steps[idx]]=[S.steps[idx],S.steps[idx+1]]; keepScroll(); } break;
     case 'addRisk': { const it={id:nid('i'),risk:'',proc:''}; S.steps[idx].items.push(it); keepScroll('[data-risk="'+id+'|'+it.id+'"]'); if(b.classList.contains('chip')){ const el=$('[data-risk="'+id+'|'+it.id+'"]'); if(el) el.placeholder='Pensando em: '+b.textContent+' → descrevam com as palavras do grupo'; } break; }
     case 'delRisk': { const s=S.steps[idx]; s.items=s.items.filter(x=>x.id!==b.dataset.item); keepScroll(); break; }
+    case 'rq': { const r=b.dataset.r; S.stepQ[id].resp=r; if(r==='ok'){ keepScroll(); } else { const ns={id:nid('s'),text:'',items:[],noRisk:false,just:'',ponto:''}; S.steps.splice(r==='antes'?idx:idx+1,0,ns); keepScroll('[data-step="'+ns.id+'"]'); } break; }
+    case 'rxInc': { const c=CATS.find(x=>x.k===b.dataset.k); S.reflex[c.k]={resp:'incluir',just:''}; const ns={id:nid('s'),text:'',items:[],noRisk:false,just:'',ponto:''}; if(c.pos==='inicio') S.steps.unshift(ns); else S.steps.push(ns); closeReflex(); keepScroll('[data-step="'+ns.id+'"]'); toast('Etapa em branco criada: escrevam o que o grupo decidiu.'); break; }
+    case 'rxJus': $('#rxJust').style.display='block'; $('#rxTxt').focus(); break;
+    case 'rxOk': { const t=$('#rxTxt').value; if(words(t).length<5){ $('#rxMsg').textContent='Escrevam pelo menos 5 palavras.'; return; } S.reflex[b.dataset.k]={resp:'justificado',just:t}; save(); openReflex(); break; }
+    case 'rxClose': closeReflex(); break;
     case 'print': doPrint(); break;
     case 'download': doDownload(); break;
     case 'send': doSend(); break;
   }
 });
 $('#btnPrev').addEventListener('click',()=>{ if(S.screen>0){ S.screen--; render(); } });
-$('#btnNext').addEventListener('click',()=>{ if(!gate(S.screen) && S.screen<SCREENS.length-1){ S.screen++; render(); } });
+$('#btnNext').addEventListener('click',()=>{ if(gate(S.screen) || S.screen>=SCREENS.length-1) return; if(S.screen===3 && pendingCats().length){ openReflex(); return; } S.screen++; render(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && $('#modal').classList.contains('on')) closeReflex(); });
+/* pergunta de reflexão ao terminar de escrever uma etapa */
+document.addEventListener('focusout', ev=>{
+  const t=ev.target; if(!t.dataset || !t.dataset.step) return;
+  const id=t.dataset.step;
+  setTimeout(()=>{
+    const i=S.steps.findIndex(s=>s.id===id); if(i<0) return; const s=S.steps[i];
+    if(S.screen!==3 || S.stepQ[id] || words(s.text).length<3) return;
+    S.stepQ[id]={q:stepQuestion(i,s.text)}; save();
+    const box=$('#rq-'+id); if(box) box.innerHTML=rqHTML(s);
+  },220);
+});
 
 /* ================================================================
    SAÍDAS: impressão, JSON, envio
@@ -1030,13 +1159,17 @@ function payload(){
   return {
     versao:VERSAO, codigo:S.codigo, envio:S.envios+1, enviado_em:new Date().toISOString(),
     turma:S.ident.turma, grupo:S.ident.grupo,
-    integrantes:S.ident.integrantes.filter(p=>p.nome.trim()).map(p=>p.nome.trim()+(p.num?' ('+p.num+')':'')).join('; '),
+    integrantes:S.ident.integrantes.filter(p=>p.nome.trim()).map(p=>p.nome.trim()).join('; '),
     experimento:expLabel(), exp_code:S.exp.code,
     titulo:S.header.titulo, numero:S.header.numero, rev:S.header.rev, data:S.header.data,
     n_etapas:S.steps.length, n_potenciais:A.nItens, etapas_sem_risco:A.semRisco,
     alertas_c1:A.c1.warn+A.c1.err, alertas_c2:A.c2.warn+A.c2.err, alertas_c3:A.c3.warn+A.c3.err,
     ind_c1:A.p1, ind_c2:A.p2, ind_c3:A.p3, indicador:A.indice,
     quiz_primeira:first+'/'+QUIZ.length, aulas_abertas:Object.keys(S.seen).length+'/8',
+    reflexoes: [
+      ...S.steps.map((s,i)=>{ const q=S.stepQ[s.id]; return q&&q.resp ? 'Etapa '+(i+1)+' – '+q.q+' → '+({ok:'já contemplado',antes:'incluiu etapa antes',depois:'incluiu etapa depois'}[q.resp]) : null; }).filter(Boolean),
+      ...CATS.filter(c=>S.reflex[c.k]).map(c=>'['+c.nome+'] '+(S.reflex[c.k].resp==='incluir'?'decidiu acrescentar etapa':'justificou: '+S.reflex[c.k].just))
+    ].join('\n'),
     tempo_min:Math.round((Date.now()-S.startedAt)/60000),
     revisao_mudancas:S.review.mudancas, revisao_novos:S.review.novos,
     itr_texto:itrTexto(), itens
